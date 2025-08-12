@@ -281,12 +281,6 @@ export function ImpotForm({ guildId, entreprise }: ImpotFormProps) {
               </div>
             </div>
 
-            <div className="pt-4 border-t">
-              <div className="flex items-center justify-center space-x-2 text-sm text-muted-foreground">
-                <Receipt className="w-4 h-4" />
-                <span>Données réelles — basées sur dotation_reports et dotation_rows</span>
-              </div>
-            </div>
           </div>
         </CardContent>
       </Card>
