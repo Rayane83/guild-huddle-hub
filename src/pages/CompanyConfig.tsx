@@ -267,7 +267,7 @@ useEffect(() => {
           <CardContent className="p-8 text-center">
             <Shield className="w-10 h-10 mx-auto mb-3 text-destructive" />
             <p className="font-semibold mb-1">Accès restreint</p>
-            <p className="text-sm text-muted-foreground">Cette page est réservée aux patrons, co-patrons et staff.</p>
+          <p className="text-sm text-muted-foreground">Cette page est réservée aux patrons, co-patrons, DOT et staff.</p>
             <Button className="mt-4" onClick={() => navigate(`/?guild=${guildId}`)}>
               <ArrowLeft className="w-4 h-4 mr-2"/>Retour
             </Button>
