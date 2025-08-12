@@ -8,9 +8,10 @@ import { supabase } from '@/integrations/supabase/client';
 interface ImpotFormProps {
   guildId: string;
   entreprise?: string;
+  entrepriseName?: string;
 }
 
-export function ImpotForm({ guildId, entreprise }: ImpotFormProps) {
+export function ImpotForm({ guildId, entreprise, entrepriseName }: ImpotFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -218,7 +219,7 @@ export function ImpotForm({ guildId, entreprise }: ImpotFormProps) {
         <CardHeader>
           <CardTitle className="text-lg flex items-center space-x-2">
             <Receipt className="w-5 h-5 text-primary" />
-            <span>Résumé Fiscal</span>
+            <span>Résumé Fiscal{entrepriseName ? ` - ${entrepriseName}` : ''}</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -293,3 +294,4 @@ export function ImpotForm({ guildId, entreprise }: ImpotFormProps) {
     </div>
   );
 }
+

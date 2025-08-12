@@ -15,6 +15,7 @@ import { BlanchimentToggle } from '@/components/BlanchimentToggle';
 import { ArchiveTable } from '@/components/ArchiveTable';
 import { DocsUpload } from '@/components/DocsUpload';
 import StaffConfig from '@/components/StaffConfig';
+import { EnterpriseSwitcher } from '@/components/EnterpriseSwitcher';
 // Utils
 import { 
   getUserGuildRoles, 
@@ -59,6 +60,8 @@ const Index = () => {
   const [currentRole, setCurrentRole] = useState<Role>('employe');
   const [entreprise, setEntreprise] = useState<string>('');
   const [userRoles, setUserRoles] = useState<string[]>([]);
+  const [enterprises, setEnterprises] = useState<Array<{ key: string; name: string }>>([]);
+  const [isLoadingEnterprises, setIsLoadingEnterprises] = useState(false);
   
   // Loading state
   const [isLoadingRoles, setIsLoadingRoles] = useState(false);
@@ -77,11 +80,14 @@ const Index = () => {
           discriminator: ''
         } as any);
         // Defer any Supabase calls to avoid deadlocks in the callback
-        setTimeout(() => { loadGuilds(); }, 0);
+        setTimeout(() => { loadGuilds(); loadEnterprises(); }, 0);
       } else {
         setUser(null);
         setGuilds([]);
         setSelectedGuildId('');
+        setEntreprise('');
+        setUserRoles([]);
+        setEnterprises([]);
       }
     });
 
@@ -96,7 +102,7 @@ const Index = () => {
           avatar: (u.user_metadata?.avatar_url || u.user_metadata?.avatar) as string | undefined,
           discriminator: ''
         } as any);
-        setTimeout(() => { loadGuilds(); }, 0);
+        setTimeout(() => { loadGuilds(); loadEnterprises(); }, 0);
       }
     });
 
@@ -125,6 +131,7 @@ const Index = () => {
     setCurrentRole('employe');
     setEntreprise('');
     setUserRoles([]);
+    setEnterprises([]);
   };
 
   // Load available guilds from Supabase config and DB
@@ -162,6 +169,23 @@ const Index = () => {
     }
   };
 
+  const loadEnterprises = async () => {
+    try {
+      setIsLoadingEnterprises(true);
+      const { data, error } = await supabase
+        .from('enterprises')
+        .select('key,name')
+        .order('name', { ascending: true });
+      if (error) throw error;
+      setEnterprises(data || []);
+    } catch (e) {
+      console.warn('loadEnterprises error', e);
+      setEnterprises([]);
+    } finally {
+      setIsLoadingEnterprises(false);
+    }
+  };
+
   // Update URL when guild changes
   const updateURLGuild = (guildId: string) => {
     const url = new URL(window.location.href);
@@ -172,6 +196,7 @@ const Index = () => {
   // Handle guild change
   const handleGuildChange = (guildId: string) => {
     setSelectedGuildId(guildId);
+    setEntreprise('');
     updateURLGuild(guildId);
   };
 
@@ -191,7 +216,8 @@ const Index = () => {
         
         setUserRoles(roles);
         setCurrentRole(resolveRole(roles));
-        setEntreprise(getEntrepriseFromRoles(roles));
+        const derived = getEntrepriseFromRoles(roles);
+        setEntreprise(prev => prev || derived);
       } catch (error) {
         console.error('Failed to fetch user roles:', error);
         if (alive) {
@@ -211,6 +237,8 @@ const Index = () => {
       alive = false;
     };
   }, [selectedGuildId]);
+
+  const selectedEnterpriseName = enterprises.find(e => e.key === entreprise)?.name;
 
   if (!isLoggedIn) {
     return <LoginScreen onLogin={handleLogin} />;
@@ -233,7 +261,14 @@ const Index = () => {
                 />
                 <h1 className="text-2xl font-bold">Portail Entreprise Flashback Fa</h1>
               </div>
-              
+              <RoleGate allow={(role) => role === 'staff' || role === 'dot'} currentRole={currentRole}>
+                <EnterpriseSwitcher
+                  enterprises={enterprises}
+                  selectedKey={entreprise}
+                  onEnterpriseChange={setEntreprise}
+                  isLoading={isLoadingEnterprises}
+                />
+              </RoleGate>
             </div>
 
             <div className="flex items-center space-x-4">
@@ -247,7 +282,7 @@ const Index = () => {
                     </Badge>
                     {entreprise && entreprise !== 'Aucune Entreprise' && (
                       <Badge variant="outline" className="text-xs">
-                        {entreprise}
+                        {selectedEnterpriseName || entreprise}
                       </Badge>
                     )}
                   </div>
@@ -392,7 +427,7 @@ const Index = () => {
 
             <TabsContent value="impot" className="space-y-6">
               <RoleGate allow={canAccessImpot} currentRole={currentRole}>
-                <ImpotForm guildId={selectedGuildId} entreprise={entreprise} />
+                <ImpotForm guildId={selectedGuildId} entreprise={entreprise} entrepriseName={selectedEnterpriseName} />
               </RoleGate>
             </TabsContent>
 
