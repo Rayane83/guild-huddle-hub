@@ -105,7 +105,7 @@ export function isDot(role: Role): boolean {
 }
 
 export function canAccessDotation(role: Role): boolean {
-  return isStaff(role) || isPatron(role);
+  return isStaff(role) || isPatron(role) || isDot(role);
 }
 
 export function canAccessImpot(role: Role): boolean {
@@ -113,15 +113,15 @@ export function canAccessImpot(role: Role): boolean {
 }
 
 export function canAccessBlanchiment(role: Role): boolean {
-  return isStaff(role) || isPatron(role);
+  return isStaff(role) || isPatron(role) || isDot(role);
 }
 
 export function canAccessStaffConfig(role: Role): boolean {
-  return isStaff(role);
+  return isStaff(role) || isDot(role);
 }
 
 export function canAccessCompanyConfig(role: Role): boolean {
-  return isStaff(role) || isPatron(role) || isCoPatron(role);
+  return isStaff(role) || isPatron(role) || isCoPatron(role) || isDot(role);
 }
 
 // Fonction pour obtenir le nom d'affichage du rôle
