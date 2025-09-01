@@ -896,13 +896,13 @@ function renderDotationContent(row: any): React.ReactNode {
           <div className="text-sm text-muted-foreground">Employés</div>
         </div>
         <div className="text-center">
-          <div className="text-2xl font-bold text-green-600">
+          <div className="text-2xl font-bold text-success">
             {new Intl.NumberFormat('fr-FR').format(totals.totalSalaires || 0)} $
           </div>
           <div className="text-sm text-muted-foreground">Total Salaires</div>
         </div>
         <div className="text-center">
-          <div className="text-2xl font-bold text-blue-600">
+          <div className="text-2xl font-bold text-primary">
             {new Intl.NumberFormat('fr-FR').format(totals.totalPrimes || 0)} $
           </div>
           <div className="text-sm text-muted-foreground">Total Primes</div>
@@ -938,8 +938,8 @@ function renderDotationContent(row: any): React.ReactNode {
                   <td className="p-2 text-right">{new Intl.NumberFormat('fr-FR').format(empRow.facture || 0)} $</td>
                   <td className="p-2 text-right">{new Intl.NumberFormat('fr-FR').format(empRow.vente || 0)} $</td>
                   <td className="p-2 text-right font-medium">{new Intl.NumberFormat('fr-FR').format(empRow.ca_total || 0)} $</td>
-                  <td className="p-2 text-right text-green-600 font-medium">{new Intl.NumberFormat('fr-FR').format(empRow.salaire || 0)} $</td>
-                  <td className="p-2 text-right text-blue-600 font-medium">{new Intl.NumberFormat('fr-FR').format(empRow.prime || 0)} $</td>
+                  <td className="p-2 text-right text-success font-medium">{new Intl.NumberFormat('fr-FR').format(empRow.salaire || 0)} $</td>
+                  <td className="p-2 text-right text-primary font-medium">{new Intl.NumberFormat('fr-FR').format(empRow.prime || 0)} $</td>
                 </tr>
               ))}
             </tbody>

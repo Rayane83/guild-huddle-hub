@@ -76,7 +76,7 @@ export function FicheImpotTemplate({ data }: FicheImpotTemplateProps) {
   const impotRichesse = calculateWealthTax(data.soldeActuel);
 
   return (
-    <div className="min-h-screen bg-white text-black p-6 print:p-4" style={{ fontSize: '11px', lineHeight: '1.2' }}>
+    <div className="min-h-screen bg-background text-foreground p-6 print:p-4" style={{ fontSize: '11px', lineHeight: '1.2' }}>
       {/* En-tête */}
       <div className="text-center mb-8">
         <h1 className="text-2xl font-bold mb-2">FICHE IMPÔT</h1>
@@ -86,7 +86,7 @@ export function FicheImpotTemplate({ data }: FicheImpotTemplateProps) {
             Période: {formatDate(new Date(data.period.start_at))} → {formatDate(new Date(data.period.end_at))}
           </div>
         )}
-        <div className="text-sm text-gray-600">
+        <div className="text-sm text-muted-foreground">
           Généré le: {formatDateTime(currentDate)}
         </div>
       </div>

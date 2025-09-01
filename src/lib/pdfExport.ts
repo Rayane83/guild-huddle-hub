@@ -122,10 +122,11 @@ export async function generatePDFFromComponent(
               .p-6 { padding: 1.5rem; }
               .border { border: 1px solid #666; }
               .border-2 { border: 2px solid #666; }
-              .bg-gray-50 { background-color: #f9fafb; }
-              .bg-gray-100 { background-color: #f3f4f6; }
-              .bg-gray-200 { background-color: #e5e7eb; }
-              .text-gray-600 { color: #4b5563; }
+              .bg-muted { background-color: hsl(var(--muted)); }
+              .bg-muted\\/50 { background-color: hsl(var(--muted) / 0.5); }
+              .bg-secondary { background-color: hsl(var(--secondary)); }
+              .border-border { border-color: hsl(var(--border)); }
+              .text-muted-foreground { color: hsl(var(--muted-foreground)); }
               .grid { display: grid; }
               .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
               .gap-4 { gap: 1rem; }

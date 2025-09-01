@@ -428,9 +428,9 @@ export function SystemDiagnostic() {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'success': return <CheckCircle className="w-4 h-4 text-green-600" />;
-      case 'warning': return <AlertTriangle className="w-4 h-4 text-yellow-600" />;
-      case 'error': return <XCircle className="w-4 h-4 text-red-600" />;
+      case 'success': return <CheckCircle className="w-4 h-4 text-success" />;
+      case 'warning': return <AlertTriangle className="w-4 h-4 text-warning" />;
+      case 'error': return <XCircle className="w-4 h-4 text-destructive" />;
       default: return <Activity className="w-4 h-4 text-muted-foreground" />;
     }
   };
@@ -451,10 +451,10 @@ export function SystemDiagnostic() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'success': return 'border-l-green-500 bg-green-50';
-      case 'warning': return 'border-l-yellow-500 bg-yellow-50';
-      case 'error': return 'border-l-red-500 bg-red-50';
-      default: return 'border-l-gray-500 bg-gray-50';
+      case 'success': return 'border-l-success bg-success/10';
+      case 'warning': return 'border-l-warning bg-warning/10';
+      case 'error': return 'border-l-destructive bg-destructive/10';
+      default: return 'border-l-muted-foreground bg-muted';
     }
   };
 
@@ -487,13 +487,13 @@ export function SystemDiagnostic() {
             
             {stats.total > 0 && (
               <div className="flex space-x-3 text-sm">
-                <Badge variant="default" className="bg-green-100 text-green-800 border-green-300">
+                <Badge variant="default" className="bg-success/20 text-success-foreground border-success">
                   ✓ {stats.success}
                 </Badge>
-                <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-300">
+                <Badge variant="secondary" className="bg-warning/20 text-warning-foreground border-warning">
                   ⚠ {stats.warning}
                 </Badge>
-                <Badge variant="destructive" className="bg-red-100 text-red-800 border-red-300">
+                <Badge variant="destructive" className="bg-destructive/20 text-destructive-foreground border-destructive">
                   ✗ {stats.error}
                 </Badge>
                 <Badge variant="outline">
@@ -564,10 +564,10 @@ export function SystemDiagnostic() {
                 <p>• {stats.warning} avertissements</p>
                 <p>• {stats.error} erreurs critiques</p>
                 {stats.error === 0 && (
-                  <p className="text-green-600 font-medium">✓ Système opérationnel</p>
+                  <p className="text-success font-medium">✓ Système opérationnel</p>
                 )}
                 {stats.error > 0 && (
-                  <p className="text-red-600 font-medium">✗ Problèmes détectés nécessitant une attention</p>
+                  <p className="text-destructive font-medium">✗ Problèmes détectés nécessitant une attention</p>
                 )}
               </div>
             </div>
