@@ -110,9 +110,27 @@ export function useConfigSync() {
         {
           event: '*',
           schema: 'public',
-          table: 'blanchiment_settings'
+          table: 'company_configs'
         },
-        () => triggerDataRefresh('blanchiment_settings')
+        () => triggerDataRefresh('company_configs')
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'grade_rules'
+        },  
+        () => triggerDataRefresh('grade_rules')
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'blanchiment_global'
+        },
+        () => triggerDataRefresh('blanchiment_global')
       )
       .subscribe();
 

@@ -111,33 +111,52 @@ export function calculateFromPaliers(
 ): { salaire: number; prime: number } {
   if (!paliers.length) return { salaire: 0, prime: 0 };
 
+  // Trier les paliers par ordre croissant de min
+  const sortedPaliers = [...paliers].sort((a, b) => a.min - b.min);
+
   // Trouve le palier approprié
-  const palier = paliers.find(p => caTotal >= p.min && caTotal <= p.max);
+  const palier = sortedPaliers.find(p => caTotal >= p.min && (p.max === null || caTotal <= p.max));
   
   if (!palier) {
-    // Si pas de palier trouvé, utilise le dernier
-    const lastPalier = paliers[paliers.length - 1];
-    if (caTotal > lastPalier.max) {
+    // Si pas de palier trouvé et CA est au-dessus du dernier palier
+    const lastPalier = sortedPaliers[sortedPaliers.length - 1];
+    if (caTotal > (lastPalier.max || lastPalier.min)) {
       return {
-        salaire: isPatron ? lastPalier.sal_max_pat : lastPalier.sal_max_emp,
-        prime: isPatron ? lastPalier.pr_max_pat : lastPalier.pr_max_emp,
+        salaire: isPatron ? (lastPalier.sal_max_pat || 0) : (lastPalier.sal_max_emp || 0),
+        prime: isPatron ? (lastPalier.pr_max_pat || 0) : (lastPalier.pr_max_emp || 0),
       };
     }
     // Si en dessous du premier palier
-    const firstPalier = paliers[0];
+    const firstPalier = sortedPaliers[0];
     return {
-      salaire: isPatron ? firstPalier.sal_min_pat : firstPalier.sal_min_emp,
-      prime: isPatron ? firstPalier.pr_min_pat : firstPalier.pr_min_emp,
+      salaire: isPatron ? (firstPalier.sal_min_pat || 0) : (firstPalier.sal_min_emp || 0),
+      prime: isPatron ? (firstPalier.pr_min_pat || 0) : (firstPalier.pr_min_emp || 0),
+    };
+  }
+
+  // Si max est null, utiliser les valeurs max directement
+  if (palier.max === null || palier.max === undefined) {
+    return {
+      salaire: isPatron ? (palier.sal_max_pat || 0) : (palier.sal_max_emp || 0),
+      prime: isPatron ? (palier.pr_max_pat || 0) : (palier.pr_max_emp || 0),
+    };
+  }
+
+  // Éviter la division par zéro
+  if (palier.max === palier.min) {
+    return {
+      salaire: isPatron ? (palier.sal_min_pat || 0) : (palier.sal_min_emp || 0),
+      prime: isPatron ? (palier.pr_min_pat || 0) : (palier.pr_min_emp || 0),
     };
   }
 
   // Interpolation linéaire
-  const ratio = (caTotal - palier.min) / (palier.max - palier.min);
+  const ratio = Math.min(1, Math.max(0, (caTotal - palier.min) / (palier.max - palier.min)));
   
-  const salaireMin = isPatron ? palier.sal_min_pat : palier.sal_min_emp;
-  const salaireMax = isPatron ? palier.sal_max_pat : palier.sal_max_emp;
-  const primeMin = isPatron ? palier.pr_min_pat : palier.pr_min_emp;
-  const primeMax = isPatron ? palier.pr_max_pat : palier.pr_max_emp;
+  const salaireMin = isPatron ? (palier.sal_min_pat || 0) : (palier.sal_min_emp || 0);
+  const salaireMax = isPatron ? (palier.sal_max_pat || 0) : (palier.sal_max_emp || 0);
+  const primeMin = isPatron ? (palier.pr_min_pat || 0) : (palier.pr_min_emp || 0);
+  const primeMax = isPatron ? (palier.pr_max_pat || 0) : (palier.pr_max_emp || 0);
 
   return {
     salaire: Math.round(salaireMin + ratio * (salaireMax - salaireMin)),

@@ -158,21 +158,45 @@ export function DotationForm({ guildId, entreprise, currentRole }: DotationFormP
     const handleDataSync = (event: CustomEvent) => {
       const { table } = event.detail;
       // Rafraîchir si c'est une table qui affecte les dotations
-      if (['dotation_reports', 'dotation_rows', 'periodic', 'focus'].includes(table)) {
+      if (['dotation_reports', 'dotation_rows', 'tax_brackets', 'periodic', 'focus'].includes(table)) {
         console.log(`Rafraîchissement des dotations suite à: ${table}`);
-        // Refetch data
+        // Refetch data avec gestion d'erreur améliorée
         setIsLoading(true);
         const fetchData = async () => {
           if (!guildId) return;
           setError(null);
           try {
+            // Recharger les paliers en cas de changement
+            const { data: brk, error: e1 } = await supabase
+              .from('tax_brackets')
+              .select('*')
+              .eq('guild_id', guildId)
+              .eq('entreprise_key', entreprise);
+            if (e1) throw e1;
+
+            let paliersToUse: PalierConfig[] = (brk || []).map((b: any) => ({
+              min: Number(b.min) || 0,
+              max: b.max === null || b.max === undefined ? Number((Number(b.min) || 0) + 1e12) : Number(b.max),
+              taux: Number(b.taux) || 0,
+              sal_min_emp: Number(b.sal_min_emp) || 0,
+              sal_max_emp: Number(b.sal_max_emp) || 0,
+              sal_min_pat: Number(b.sal_min_pat) || 0,
+              sal_max_pat: Number(b.sal_max_pat) || 0,
+              pr_min_emp: Number(b.pr_min_emp) || 0,
+              pr_max_emp: Number(b.pr_max_emp) || 0,
+              pr_min_pat: Number(b.pr_min_pat) || 0,
+              pr_max_pat: Number(b.pr_max_pat) || 0,
+            }));
+            setPaliers(paliersToUse);
+
             // Recharger les données de dotation
             const { data: pend, error: ePend } = await supabase
               .from('dotation_reports')
               .select('id, created_at, solde_actuel, totals, employees_count')
               .eq('guild_id', guildId)
               .eq('entreprise_key', entreprise)
-              .is('archived_at', null);
+              .is('archived_at', null)
+              .order('created_at', { ascending: false });
             if (ePend) throw ePend;
             setPendingReports(pend || []);
           } catch (err) {
@@ -763,10 +787,10 @@ export function DotationForm({ guildId, entreprise, currentRole }: DotationFormP
                     <td className="p-2 text-center font-semibold text-primary">
                       {formatCurrencyDollar(row.ca_total)}
                     </td>
-                    <td className="p-2 text-center font-semibold text-success">
+                    <td className="p-2 text-center font-semibold text-emerald-600 dark:text-emerald-400">
                       {formatCurrencyDollar(row.salaire)}
                     </td>
-                    <td className="p-2 text-center font-semibold text-warning">
+                    <td className="p-2 text-center font-semibold text-amber-600 dark:text-amber-400">
                       {formatCurrencyDollar(row.prime)}
                     </td>
                     <td className="p-2 text-center">
@@ -791,8 +815,8 @@ export function DotationForm({ guildId, entreprise, currentRole }: DotationFormP
               <span>Totaux :</span>
               <div className="flex space-x-8">
                 <span className="text-primary">CA: {formatCurrencyDollar(totalCA)}</span>
-                <span className="text-success">Salaires: {formatCurrencyDollar(totalSalaires)}</span>
-                <span className="text-warning">Primes: {formatCurrencyDollar(totalPrimes)}</span>
+                <span className="text-emerald-600 dark:text-emerald-400">Salaires: {formatCurrencyDollar(totalSalaires)}</span>
+                <span className="text-amber-600 dark:text-amber-400">Primes: {formatCurrencyDollar(totalPrimes)}</span>
               </div>
             </div>
           </div>
