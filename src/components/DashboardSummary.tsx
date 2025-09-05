@@ -49,6 +49,8 @@ export function DashboardSummary({ guildId, currentRole, entreprise }: Dashboard
       setIsLoading(true);
       setError(null);
       try {
+        console.log(`📋 Chargement des données du dashboard - Guild: ${guildId}, Role: ${currentRole}, Entreprise: ${entreprise}`);
+        
         // 1) Entreprises disponibles
         const { data: ents, error: eEnt } = await supabase
           .from('enterprises')
@@ -57,6 +59,7 @@ export function DashboardSummary({ guildId, currentRole, entreprise }: Dashboard
           .order('name', { ascending: true });
         if (eEnt) throw eEnt;
         const list = (ents || []).map((e:any)=> ({ id: e.key as string, name: e.name as string, guildId: e.enterprise_guild_id as string | undefined, employeeRoleId: e.employee_role_id as string | undefined }));
+        console.log(`🏢 Entreprises trouvées:`, list.map(e => `${e.name}(${e.id})`));
         setEnterpriseOptions(list);
 
         const role = (currentRole || 'employe').toLowerCase();
@@ -158,14 +161,23 @@ export function DashboardSummary({ guildId, currentRole, entreprise }: Dashboard
       const { table } = event.detail;
       // Rafraîchir si c'est une table qui affecte le dashboard
       if (['dotation_reports', 'dotation_rows', 'enterprises', 'tax_brackets', 'periodic', 'focus'].includes(table)) {
-        console.log(`Rafraîchissement du dashboard suite à: ${table}`);
+        console.log(`📊 Rafraîchissement du dashboard suite à: ${table} (role: ${currentRole}, entreprise: ${entreprise})`);
         setRefreshTick((t) => t + 1);
       }
     };
 
+    const handleConfigSync = () => {
+      console.log(`⚙️ Configuration synchronisée - Rafraîchissement du dashboard (role: ${currentRole})`);
+      setRefreshTick((t) => t + 1);
+    };
+
     window.addEventListener('data-sync', handleDataSync as EventListener);
-    return () => window.removeEventListener('data-sync', handleDataSync as EventListener);
-  }, []);
+    window.addEventListener('config-sync', handleConfigSync);
+    return () => {
+      window.removeEventListener('data-sync', handleDataSync as EventListener);
+      window.removeEventListener('config-sync', handleConfigSync);
+    };
+  }, [currentRole, entreprise]);
 
   const currentWeek = getISOWeek();
 

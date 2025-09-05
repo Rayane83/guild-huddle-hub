@@ -16,16 +16,20 @@ export function useConfigSync() {
     try {
       // Force la synchronisation depuis Supabase
       const config = await configRepo.get();
+      console.log('🔄 Configuration synchronisée:', { 
+        principalGuildId: config.principalGuildId,
+        enterpriseCount: Object.keys(config.enterprises || {}).length
+      });
       
       // Déclenche un event pour notifier les autres composants
       window.dispatchEvent(new CustomEvent('config-sync', { detail: config }));
     } catch (error) {
-      console.error('Erreur de synchronisation config:', error);
+      console.error('❌ Erreur de synchronisation config:', error);
     }
   }, [isAuthenticated]);
 
   const triggerDataRefresh = useCallback((tableName: string) => {
-    console.log(`Données mises à jour sur ${tableName}, synchronisation...`);
+    console.log(`🔄 Données mises à jour dans la table: ${tableName}`);
     // Déclenche un event générique pour rafraîchir toutes les données
     window.dispatchEvent(new CustomEvent('data-sync', { detail: { table: tableName } }));
   }, []);

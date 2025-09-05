@@ -369,7 +369,7 @@ export function SystemDiagnostic() {
         });
       }
 
-      // Test 8: Vérification des sessions et permissions
+      // Test 8: Test de synchronisation des données d'entreprises entre sessions
       updateProgress(95);
       try {
         const start = performance.now();
@@ -381,40 +381,60 @@ export function SystemDiagnostic() {
           .limit(5);
         
         if (entError) throw entError;
+
+        // Tester l'accès aux rapports de dotation les plus récents
+        const { data: reports, error: reportsError } = await supabase
+          .from('dotation_reports')
+          .select('guild_id, entreprise_key, solde_actuel, created_at')
+          .order('created_at', { ascending: false })
+          .limit(10);
         
-        // Tester l'accès aux configurations
+        if (reportsError) throw reportsError;
+        
+        // Tester l'accès aux configurations d'entreprises
         const { data: configs, error: configError } = await supabase
           .from('app_storage')
-          .select('*')
-          .eq('scope', 'global')
-          .limit(5);
+          .select('scope, guild_id, entreprise_key, key')
+          .in('scope', ['global', 'enterprise'])
+          .limit(10);
         
         if (configError) throw configError;
         
+        // Analyser les données pour détecter des incohérences
+        const guildIds = [...new Set(enterprises?.map(e => e.guild_id) || [])];
+        const reportsByGuild = reports?.reduce((acc, r) => {
+          acc[r.guild_id] = (acc[r.guild_id] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>) || {};
+        
         const duration = Math.round(performance.now() - start);
+        const hasInconsistencies = guildIds.length > 0 && Object.keys(reportsByGuild).length === 0;
+        
         addResult({
-          category: 'Permissions',
-          name: 'Accès données cross-session',
-          status: 'success',
-          message: 'Accès aux données global fonctionnel',
+          category: 'Cross-Session',
+          name: 'Synchronisation données entreprises',
+          status: hasInconsistencies ? 'warning' : 'success',
+          message: hasInconsistencies ? 'Données d\'entreprises détectées mais aucun rapport' : 'Données d\'entreprises cohérentes entre sessions',
           details: [
             `Entreprises accessibles: ${enterprises?.length || 0}`,
-            `Configurations globales: ${configs?.length || 0}`,
+            `Guilds uniques: ${guildIds.length}`,
+            `Rapports récents: ${reports?.length || 0}`,
+            `Configs cross-session: ${configs?.length || 0}`,
             `Temps d'accès: ${duration}ms`,
-            'Données partagées entre sessions: ✓'
+            hasInconsistencies ? '⚠️ Incohérence détectée' : '✓ Données synchronisées'
           ],
           duration,
           timestamp: new Date()
         });
       } catch (e) {
         addResult({
-          category: 'Permissions',
-          name: 'Accès données cross-session',
+          category: 'Cross-Session',
+          name: 'Synchronisation données entreprises',
           status: 'error',
-          message: 'Problème d\'accès aux données partagées',
+          message: 'Problème de synchronisation des données d\'entreprises',
           details: [
             e instanceof Error ? e.message : 'Erreur inconnue',
-            'Vérifiez les politiques RLS'
+            'Vérifiez les politiques RLS et la synchronisation temps réel'
           ],
           timestamp: new Date()
         });
@@ -445,6 +465,7 @@ export function SystemDiagnostic() {
       case 'Realtime': return <Wifi className="w-4 h-4" />;
       case 'Performance': return <RefreshCw className="w-4 h-4" />;
       case 'Permissions': return <Users className="w-4 h-4" />;
+      case 'Cross-Session': return <Users className="w-4 h-4" />;
       default: return <Activity className="w-4 h-4" />;
     }
   };
