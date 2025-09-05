@@ -5,23 +5,15 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BlanchimentState } from '@/lib/types';
-import { formatCurrencyDollar, parseNumber } from '@/lib/fmt';
 import { handleApiError } from '@/lib/api';
 import { 
-  Shield, 
-  ShieldCheck, 
-  ShieldX, 
-  Calculator, 
   AlertCircle,
   Save,
-  Copy,
-  FileText,
-  FileSpreadsheet
+  FileText
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from "@/integrations/supabase/client";
 import { exportBlanchimentToPDF } from '@/lib/pdfExport';
-import { exportBlanchimentXLSX } from '@/lib/export';
 
 interface BlanchimentToggleProps {
   guildId: string;

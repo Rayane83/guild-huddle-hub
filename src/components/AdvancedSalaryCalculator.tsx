@@ -15,13 +15,10 @@ import {
   Plus, 
   Trash2, 
   Save, 
-  AlertCircle,
-  TrendingUp,
-  Users,
-  DollarSign
+  AlertCircle
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useCompanyStorage } from '@/hooks/useUnifiedStorage';
+
 
 interface AdvancedSalaryCalculatorProps {
   entreprise: string;

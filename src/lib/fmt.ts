@@ -23,13 +23,6 @@ export function formatCurrencyDollar(amount: number): string {
 }
 
 /**
- * Formate un nombre avec les séparateurs français
- */
-export function formatNumber(num: number): string {
-  return new Intl.NumberFormat('fr-FR').format(num);
-}
-
-/**
  * Formate un pourcentage
  */
 export function formatPercentage(num: number, decimals: number = 1): string {
@@ -165,31 +158,10 @@ export function calculateFromPaliers(
 }
 
 /**
- * Debounce pour les recherches
- */
-export function debounce<T extends (...args: any[]) => any>(
-  func: T,
-  wait: number
-): (...args: Parameters<T>) => void {
-  let timeout: NodeJS.Timeout;
-  return (...args: Parameters<T>) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
-  };
-}
-
-/**
  * Génère un ID unique simple
  */
 export function generateId(): string {
   return Math.random().toString(36).substr(2, 9);
-}
-
-/**
- * Clamp une valeur entre min et max
- */
-export function clamp(value: number, min: number, max: number): number {
-  return Math.min(Math.max(value, min), max);
 }
 
 /**
