@@ -21,19 +21,23 @@ export default defineConfig(({ mode }) => ({
   },
   build: {
     target: 'esnext',
+    chunkSizeWarningLimit: 600,
     rollupOptions: {
       output: {
         manualChunks: {
           // Core React libraries
           'react-vendor': ['react', 'react-dom'],
           
-          // UI components
+          // UI components (split into smaller chunks)
           'ui-vendor': [
             '@radix-ui/react-dialog',
             '@radix-ui/react-dropdown-menu',
             '@radix-ui/react-tabs',
             '@radix-ui/react-select',
             '@radix-ui/react-toast',
+            '@radix-ui/react-accordion',
+            '@radix-ui/react-checkbox',
+            '@radix-ui/react-switch',
           ],
           
           // Utils and smaller libraries
@@ -42,13 +46,17 @@ export default defineConfig(({ mode }) => ({
             'tailwind-merge',
             'lucide-react',
             'date-fns',
+            'zod',
+            'react-hook-form',
           ],
           
-          // Data libraries
+          // Heavy data processing libraries (separated)
+          'xlsx-vendor': ['xlsx'],
+          
+          // Database and API libraries
           'data-vendor': [
             '@tanstack/react-query',
             '@supabase/supabase-js',
-            'xlsx',
           ],
         },
       },

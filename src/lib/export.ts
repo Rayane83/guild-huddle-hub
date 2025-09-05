@@ -24,12 +24,7 @@ export async function exportBlanchimentToPDF(data: {
   percGroupe: number;
   guildName?: string;
 }): Promise<void> {
-  // Use React components to generate HTML content
-  const { createRoot } = await import('react-dom/client');
-  const React = await import('react');
-  
-  // This would render the BlanchimentTemplate component and convert to PDF
-  // For now, show print dialog
+  // PDF export requires server-side implementation or print dialog
   throw new Error('PDF export requires server-side implementation or print dialog');
 }
 
