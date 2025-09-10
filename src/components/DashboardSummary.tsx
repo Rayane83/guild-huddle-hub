@@ -1,23 +1,19 @@
+// Composant temporairement simplifié pour la nouvelle structure
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DashboardSummary as IDashboardSummary } from '@/lib/types';
 import { formatCurrencyDollar, formatPercentage, getISOWeek } from '@/lib/fmt';
-import { handleApiError } from '@/lib/api';
 import { 
   TrendingUp, 
-  TrendingDown, 
-  DollarSign, 
-  Receipt, 
   Users, 
   Calendar,
-  AlertCircle 
+  AlertCircle,
+  Building2,
+  RefreshCw
 } from 'lucide-react';
-import { SystemDiagnostic } from '@/components/SystemDiagnostic';
+import { NewDashboard } from './NewDashboard';
 import type { Role } from '@/lib/types';
-import { supabase } from '@/integrations/supabase/client';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface DashboardSummaryProps {
   guildId: string;
@@ -26,206 +22,13 @@ interface DashboardSummaryProps {
 }
 
 export function DashboardSummary({ guildId, currentRole, entreprise }: DashboardSummaryProps) {
-  const [items, setItems] = useState<Array<{
-    entreprise: string;
-    name?: string;
-    ca_brut: number;
-    depenses: number;
-    benefice: number;
-    taux_imposition: number;
-    montant_impots: number;
-    employee_count?: number;
-  }>>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [enterpriseOptions, setEnterpriseOptions] = useState<Array<{ id: string; name: string; guildId?: string; employeeRoleId?: string }>>([]);
-  const [selectedEntKey, setSelectedEntKey] = useState<string>('all');
-  const [refreshTick, setRefreshTick] = useState<number>(0);
-
-  useEffect(() => {
-    let alive = true;
-    async function load() {
-      if (!guildId) return;
-      setIsLoading(true);
-      setError(null);
-      try {
-        console.log(`📋 Chargement des données du dashboard - Guild: ${guildId}, Role: ${currentRole}, Entreprise: ${entreprise}`);
-        
-        // 1) Entreprises disponibles
-        const { data: ents, error: eEnt } = await supabase
-          .from('enterprises')
-          .select('key,name,enterprise_guild_id,employee_role_id')
-          .eq('guild_id', guildId)
-          .order('name', { ascending: true });
-        if (eEnt) throw eEnt;
-        const list = (ents || []).map((e:any)=> ({ id: e.key as string, name: e.name as string, guildId: e.enterprise_guild_id as string | undefined, employeeRoleId: e.employee_role_id as string | undefined }));
-        console.log(`🏢 Entreprises trouvées:`, list.map(e => `${e.name}(${e.id})`));
-        setEnterpriseOptions(list);
-
-        const role = (currentRole || 'employe').toLowerCase();
-        const isStaffOrDot = role.includes('staff') || role.includes('dot');
-        const targets = isStaffOrDot
-          ? (selectedEntKey && selectedEntKey !== 'all' ? [selectedEntKey] : list.map((e) => e.id))
-          : (entreprise ? [entreprise] : list[0] ? [list[0].id] : []);
-
-        const results: any[] = [];
-        for (const entKey of targets) {
-          // Dernier rapport
-          let rq = supabase
-            .from('dotation_reports')
-            .select('id, employees_count, totals, solde_actuel, created_at')
-            .eq('guild_id', guildId)
-            .eq('entreprise_key', entKey)
-            .order('created_at', { ascending: false })
-            .limit(1);
-          const { data: rRows, error: rErr } = await rq;
-          if (rErr) throw rErr;
-          const report = rRows && rRows[0];
-
-          let caBrut = 0, depenses = 0;
-          if (report) {
-            const { data: rows, error: rowsErr } = await supabase
-              .from('dotation_rows')
-              .select('ca_total, facture')
-              .eq('report_id', report.id);
-            if (rowsErr) throw rowsErr;
-            for (const r of rows || []) {
-              caBrut += Number(r.ca_total || 0);
-              depenses += Number(r.facture || 0);
-            }
-          }
-
-          const benefice = Math.max(0, caBrut - depenses);
-          let tauxImposition = 0;
-          const { data: brackets } = await supabase
-            .from('tax_brackets')
-            .select('min,max,taux')
-            .eq('guild_id', guildId)
-            .eq('entreprise_key', entKey)
-            .order('min', { ascending: true });
-          if (brackets && brackets.length) {
-            const b = brackets.find(b => Number(b.min) <= benefice && (b.max === null || Number(b.max) >= benefice)) || brackets[brackets.length - 1];
-            tauxImposition = Number(b?.taux || 0);
-          }
-          const montantImpots = Math.round(benefice * (tauxImposition / 100));
-
-          // Employés: live (staff/dot) sinon chiffre du dernier rapport
-          let employeeCount = report?.employees_count || 0;
-          if (isStaffOrDot) {
-            const entMeta = list.find(e=>e.id===entKey);
-            if (entMeta?.guildId && entMeta?.employeeRoleId) {
-              try {
-                const { data, error } = await supabase.functions.invoke('discord-role-counts', {
-                  body: { guildId: entMeta.guildId, roleIds: [entMeta.employeeRoleId] },
-                });
-                if (!error && (data as any)?.ok) {
-                  const counts = (data as any)?.counts || {};
-                  employeeCount = counts[entMeta.employeeRoleId] ?? employeeCount;
-                }
-              } catch {}
-            }
-          }
-
-          results.push({
-            entreprise: entKey,
-            name: list.find(e=>e.id===entKey)?.name || entKey,
-            ca_brut: caBrut,
-            depenses,
-            benefice,
-            taux_imposition: tauxImposition,
-            montant_impots: montantImpots,
-            employee_count: employeeCount,
-          });
-        }
-        if (!alive) return;
-        setItems(results);
-      } catch (e) {
-        if (alive) setError(handleApiError(e));
-      } finally {
-        if (alive) setIsLoading(false);
-      }
-    }
-    load();
-    return () => { alive = false; };
-  }, [guildId, currentRole, entreprise, selectedEntKey, refreshTick]);
-
-  useEffect(() => {
-    if (!(currentRole === 'staff' || currentRole === 'dot')) return;
-    const id = setInterval(() => setRefreshTick((t) => t + 1), 60000);
-    return () => clearInterval(id);
-  }, [currentRole]);
-
-  // Écoute les événements de synchronisation pour rafraîchir automatiquement
-  useEffect(() => {
-    const handleDataSync = (event: CustomEvent) => {
-      const { table } = event.detail;
-      // Rafraîchir si c'est une table qui affecte le dashboard
-      if (['dotation_reports', 'dotation_rows', 'enterprises', 'tax_brackets', 'periodic', 'focus'].includes(table)) {
-        console.log(`📊 Rafraîchissement du dashboard suite à: ${table} (role: ${currentRole}, entreprise: ${entreprise})`);
-        setRefreshTick((t) => t + 1);
-      }
-    };
-
-    const handleConfigSync = () => {
-      console.log(`⚙️ Configuration synchronisée - Rafraîchissement du dashboard (role: ${currentRole})`);
-      setRefreshTick((t) => t + 1);
-    };
-
-    window.addEventListener('data-sync', handleDataSync as EventListener);
-    window.addEventListener('config-sync', handleConfigSync);
-    return () => {
-      window.removeEventListener('data-sync', handleDataSync as EventListener);
-      window.removeEventListener('config-sync', handleConfigSync);
-    };
-  }, [currentRole, entreprise]);
-
   const currentWeek = getISOWeek();
-
-  if (isLoading) return null;
-  if (error) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold">Dashboard</h2>
-          <Badge variant="outline">Semaine {currentWeek}</Badge>
-        </div>
-        <Card className="stat-card">
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-3 text-destructive">
-              <AlertCircle className="w-5 h-5" />
-              <div>
-                <p className="font-medium">Erreur de chargement</p>
-                <p className="text-sm text-muted-foreground">{error}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">Dashboard</h2>
         <div className="flex items-center gap-3">
-          <SystemDiagnostic />
-          {(currentRole === 'staff' || currentRole === 'dot') && (
-            <>
-              <Select value={selectedEntKey} onValueChange={setSelectedEntKey}>
-                <SelectTrigger className="w-[220px]">
-                  <SelectValue placeholder="Toutes les entreprises" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Toutes les entreprises</SelectItem>
-                  {enterpriseOptions.map((o) => (
-                    <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button variant="outline" size="sm" onClick={()=>setRefreshTick((t)=>t+1)}>Actualiser</Button>
-            </>
-          )}
           <Badge variant="outline" className="flex items-center space-x-1">
             <Calendar className="w-3 h-3" />
             <span>Semaine {currentWeek}</span>
@@ -233,52 +36,28 @@ export function DashboardSummary({ guildId, currentRole, entreprise }: Dashboard
         </div>
       </div>
 
-      {items.length === 0 ? (
-        <Card className="stat-card">
-          <CardContent className="p-6">
-            <p className="text-sm text-muted-foreground">Aucune entreprise disponible.</p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {items.map((it) => (
-            <Card key={it.entreprise} className="stat-card">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base flex items-center justify-between">
-                  <span>{it.name}</span>
-                  <Badge variant="secondary">{it.entreprise}</Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">CA Brut</span>
-                  <span className="font-semibold text-success">{formatCurrencyDollar(it.ca_brut)}</span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Dépenses</span>
-                  <span className="font-semibold text-destructive">-{formatCurrencyDollar(it.depenses)}</span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Bénéfice</span>
-                  <span className="font-semibold text-primary">{formatCurrencyDollar(it.benefice)}</span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Taux d'imposition</span>
-                  <span className="font-semibold text-warning">{formatPercentage(it.taux_imposition)}</span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Montant Impôts</span>
-                  <span className="font-semibold text-warning">{formatCurrencyDollar(it.montant_impots)}</span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Employés</span>
-                  <span className="font-semibold flex items-center"><Users className="w-4 h-4 mr-1 text-muted-foreground" />{it.employee_count ?? 0}</span>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+      <Card className="stat-card">
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <AlertCircle className="w-5 h-5 text-warning" />
+            <span>Dashboard en cours de reconstruction</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground mb-4">
+            Le dashboard principal est en cours de migration vers la nouvelle structure de base de données.
+            Utilisez le nouveau dashboard ci-dessous pour accéder aux données.
+          </p>
+          <div className="text-sm text-muted-foreground">
+            <p><strong>Guild ID:</strong> {guildId}</p>
+            <p><strong>Rôle:</strong> {currentRole || 'Non défini'}</p>
+            <p><strong>Entreprise:</strong> {entreprise || 'Non définie'}</p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Nouveau dashboard intégré */}
+      <NewDashboard />
     </div>
   );
 }

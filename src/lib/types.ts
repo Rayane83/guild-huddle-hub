@@ -21,11 +21,17 @@ export interface Profile {
 
 export interface Guild {
   id: string;
+  name: string;
+  icon?: string;
+}
+
+export interface NewGuild {
+  id: string;
   discord_id: string;
   name: string;
   icon_url?: string;
   is_active: boolean;
-  config: Record<string, any>;
+  config: any;
   created_at: string;
   updated_at: string;
 }
@@ -37,7 +43,7 @@ export interface Enterprise {
   key: string;
   discord_role_id?: string;
   discord_guild_id?: string;
-  config: Record<string, any>;
+  config: any;
   created_at: string;
   updated_at: string;
 }
@@ -61,7 +67,7 @@ export interface PayrollReport {
   period_end: string;
   total_amount: number;
   employee_count: number;
-  data: Record<string, any>;
+  data: any;
   status: string;
   created_at: string;
   updated_at: string;
@@ -76,7 +82,7 @@ export interface PayrollEntry {
   deductions: number;
   net_amount: number;
   hours_worked?: number;
-  data: Record<string, any>;
+  data: any;
   created_at: string;
 }
 
@@ -85,7 +91,7 @@ export interface DiscordConfig {
   id: string;
   client_id?: string;
   principal_guild_id?: string;
-  data: Record<string, any>;
+  data: any;
   created_at: string;
   updated_at: string;
 }

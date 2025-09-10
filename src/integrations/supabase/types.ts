@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      archives: {
+        Row: {
+          created_at: string
+          date: string | null
+          enterprise_key: string | null
+          guild_id: string
+          id: string
+          montant: number | null
+          payload: Json | null
+          statut: string | null
+          type: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string | null
+          enterprise_key?: string | null
+          guild_id: string
+          id?: string
+          montant?: number | null
+          payload?: Json | null
+          statut?: string | null
+          type?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          date?: string | null
+          enterprise_key?: string | null
+          guild_id?: string
+          id?: string
+          montant?: number | null
+          payload?: Json | null
+          statut?: string | null
+          type?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       discord_config: {
         Row: {
           client_id: string | null

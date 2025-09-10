@@ -2,7 +2,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import type { 
-  Guild, 
+  NewGuild as Guild, 
   Enterprise, 
   PayrollReport, 
   PayrollEntry, 

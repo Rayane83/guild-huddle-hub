@@ -8,13 +8,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { LoginScreen } from '@/components/LoginScreen';
 import { SEOHead } from '@/components/SEOHead';
 import { RoleGate } from '@/components/RoleGate';
-import { DashboardSummary } from '@/components/DashboardSummary';
+import { NewDashboard } from '@/components/NewDashboard';
 import { DotationForm } from '@/components/DotationForm';
 import { ImpotForm } from '@/components/ImpotForm';
 import { BlanchimentToggle } from '@/components/BlanchimentToggle';
 import { ArchiveTable } from '@/components/ArchiveTable';
 import { DocsUpload } from '@/components/DocsUpload';
-import StaffConfig from '@/components/StaffConfig';
+import { StaffConfig } from '@/components/StaffConfig';
 
 // Hooks
 import { useAuth, useGuilds, useGuildRoles } from '@/hooks';
