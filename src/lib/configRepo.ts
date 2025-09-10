@@ -1,7 +1,7 @@
 // Centralised repository for Discord configuration
-// NOTE: Uses unified storage system
+// NOTE: Uses new Supabase structure
 
-import { unifiedStorage } from './unifiedStorage';
+import { discordConfigApi } from './newApi';
 
 export type DiscordRoleMap = {
   staff?: string;
@@ -46,11 +46,19 @@ export type DiscordConfig = {
 export const configRepo = {
   async get(): Promise<DiscordConfig> {
     try {
-      const config = await unifiedStorage.get<DiscordConfig>({
-        scope: 'global',
-        key: 'discord_config'
-      });
-      return config || {};
+      const config = await discordConfigApi.get();
+      if (!config) {
+        return {};
+      }
+      
+      // Convertir la structure DB vers l'ancienne structure pour compatibilité
+      const legacyConfig: DiscordConfig = {
+        clientId: config.client_id,
+        principalGuildId: config.principal_guild_id,
+        ...config.data
+      };
+      
+      return legacyConfig;
     } catch (e) {
       console.warn('configRepo.get error:', e);
       return {};
@@ -59,10 +67,14 @@ export const configRepo = {
   
   async save(cfg: DiscordConfig): Promise<void> {
     try {
-      await unifiedStorage.set({
-        scope: 'global',
-        key: 'discord_config'
-      }, cfg);
+      // Séparer les propriétés principales des données
+      const { clientId, principalGuildId, ...data } = cfg;
+      
+      await discordConfigApi.update({
+        client_id: clientId,
+        principal_guild_id: principalGuildId,
+        data
+      });
     } catch (e) {
       console.warn('configRepo.save error:', e);
       throw e;

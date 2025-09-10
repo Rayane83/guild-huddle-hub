@@ -1,4 +1,4 @@
-// Types pour le portail Discord Multi-Guilde
+// Types pour le portail Discord Multi-Guilde avec nouvelle structure DB
 
 export type Role = 'staff' | 'patron' | 'co-patron' | 'dot' | 'employe';
 
@@ -9,19 +9,124 @@ export interface User {
   discriminator?: string;
 }
 
-export interface Guild {
+export interface Profile {
   id: string;
-  name: string;
-  icon?: string;
+  user_id: string;
+  discord_id?: string;
+  username?: string;
+  avatar_url?: string;
+  created_at: string;
+  updated_at: string;
 }
 
+export interface Guild {
+  id: string;
+  discord_id: string;
+  name: string;
+  icon_url?: string;
+  is_active: boolean;
+  config: Record<string, any>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Enterprise {
+  id: string;
+  guild_id: string;
+  name: string;
+  key: string;
+  discord_role_id?: string;
+  discord_guild_id?: string;
+  config: Record<string, any>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Employee {
+  id: string;
+  profile_id: string;
+  enterprise_id: string;
+  grade: string;
+  salary: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PayrollReport {
+  id: string;
+  enterprise_id: string;
+  created_by?: string;
+  period_start: string;
+  period_end: string;
+  total_amount: number;
+  employee_count: number;
+  data: Record<string, any>;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PayrollEntry {
+  id: string;
+  report_id: string;
+  employee_id: string;
+  base_salary: number;
+  bonus: number;
+  deductions: number;
+  net_amount: number;
+  hours_worked?: number;
+  data: Record<string, any>;
+  created_at: string;
+}
+
+// Configuration Discord
+export interface DiscordConfig {
+  id: string;
+  client_id?: string;
+  principal_guild_id?: string;
+  data: Record<string, any>;
+  created_at: string;
+  updated_at: string;
+}
+
+// Types legacy pour compatibilité
 export interface UserGuildRole {
   guildId: string;
   roles: string[];
   entreprise?: string;
 }
 
-// Configuration des paliers
+export interface DotationRow {
+  id: string;
+  name: string;
+  run: number;
+  facture: number;
+  vente: number;
+  ca_total: number;
+  salaire: number;
+  prime: number;
+}
+
+export interface DotationData {
+  rows: DotationRow[];
+  soldeActuel: number;
+  expenses?: number;
+  withdrawals?: number;
+  commissions?: number;
+  interInvoices?: number;
+}
+
+export interface DashboardSummary {
+  ca_brut: number;
+  depenses?: number;
+  depenses_deductibles?: number;
+  benefice: number;
+  taux_imposition: number;
+  montant_impots: number;
+  employee_count?: number;
+}
+
 export interface Bracket {
   min: number;
   max: number;
@@ -44,63 +149,16 @@ export interface Wealth {
 
 export interface PalierConfig extends Bracket {}
 
-// Dotation
-export interface DotationRow {
-  id: string;
-  name: string;
-  run: number;
-  facture: number;
-  vente: number;
-  ca_total: number;
-  salaire: number;
-  prime: number;
-}
-
-export interface DotationData {
-  rows: DotationRow[];
-  soldeActuel: number;
-  expenses?: number;
-  withdrawals?: number;
-  commissions?: number;
-  interInvoices?: number;
-}
-
-// Dashboard
-export interface DashboardSummary {
-  ca_brut: number;
-  depenses?: number;
-  depenses_deductibles?: number;
-  benefice: number;
-  taux_imposition: number;
-  montant_impots: number;
-  employee_count?: number;
-}
-
-// Entreprises
+// Legacy types pour entreprises
 export interface Entreprise {
   id: string;
   name: string;
 }
 
-// Blanchiment
-export interface BlanchimentState {
-  enabled: boolean;
-  useGlobal?: boolean; // si vrai, utilise les % globaux
-  percEntreprise?: number; // % pour l'entreprise (si non global)
-  percGroupe?: number; // % pour le groupe (si non global)
-}
-
-// Configuration d'entreprise avancée
-export interface Employee {
-  id: string;
-  name: string;
-  discordRole: string;
-  grade?: string;
-}
-
+// Configuration avancée
 export interface TierConfig {
   seuil: number;
-  bonus: number; // peut être négatif (pénalité)
+  bonus: number;
 }
 
 export interface CalculParam {
@@ -108,33 +166,33 @@ export interface CalculParam {
   actif: boolean;
   poids: number;
   cumulatif: boolean;
-  paliers: TierConfig[]; // max 10
+  paliers: TierConfig[];
 }
 
 export interface GradeRule {
   grade: string;
-  roleDiscordId?: string; // ID du rôle Discord associé à ce grade
+  roleDiscordId?: string;
   pourcentageCA: number;
-  tauxHoraire: number; // salaire par heure pour ce grade
+  tauxHoraire: number;
+}
+
+export interface PrimeTier {
+  seuil: number;
+  prime: number;
 }
 
 export interface SalaryConfig {
-  pourcentageCA: number; // % du CA total (de l'employé) que l'employé reçoit en salaire
+  pourcentageCA: number;
   modes?: {
-    caEmploye: boolean; // calculer avec le CA total de l'employé
-    heuresService: boolean; // calculer avec les heures de service
-    additionner: boolean; // additionner les options sélectionnées
+    caEmploye: boolean;
+    heuresService: boolean;
+    additionner: boolean;
   };
   primeBase: {
     active: boolean;
     montant: number;
   };
-  paliersPrimes: PrimeTier[]; // paliers en dollars avec primes
-}
-
-export interface PrimeTier {
-  seuil: number; // seuil en dollars du CA
-  prime: number; // montant de la prime en dollars
+  paliersPrimes: PrimeTier[];
 }
 
 export interface CompanyConfig {
@@ -154,12 +212,20 @@ export interface CompanyConfig {
   };
   gradeRules: GradeRule[];
   errorTiers: TierConfig[];
-  roleDiscord: string; // ID du rôle Discord pour la gestion d'entreprise
+  roleDiscord: string;
 }
 
 export interface CompanyConfigData {
   cfg: CompanyConfig;
   employees: Employee[];
+}
+
+// Blanchiment
+export interface BlanchimentState {
+  enabled: boolean;
+  useGlobal?: boolean;
+  percEntreprise?: number;
+  percGroupe?: number;
 }
 
 // API Response types
