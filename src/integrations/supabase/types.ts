@@ -7,519 +7,303 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "13.0.4"
   }
   public: {
     Tables: {
-      app_storage: {
-        Row: {
-          created_at: string | null
-          data: Json
-          entreprise_key: string | null
-          guild_id: string | null
-          id: string
-          key: string
-          scope: string
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          data?: Json
-          entreprise_key?: string | null
-          guild_id?: string | null
-          id?: string
-          key: string
-          scope: string
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          data?: Json
-          entreprise_key?: string | null
-          guild_id?: string | null
-          id?: string
-          key?: string
-          scope?: string
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      archives: {
-        Row: {
-          created_at: string
-          date: string | null
-          entreprise_key: string | null
-          guild_id: string
-          id: string
-          montant: number | null
-          payload: Json | null
-          statut: string | null
-          type: string | null
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          date?: string | null
-          entreprise_key?: string | null
-          guild_id: string
-          id?: string
-          montant?: number | null
-          payload?: Json | null
-          statut?: string | null
-          type?: string | null
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          date?: string | null
-          entreprise_key?: string | null
-          guild_id?: string
-          id?: string
-          montant?: number | null
-          payload?: Json | null
-          statut?: string | null
-          type?: string | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      blanchiment_global: {
-        Row: {
-          created_at: string
-          guild_id: string
-          perc_entreprise: number | null
-          perc_groupe: number | null
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          guild_id: string
-          perc_entreprise?: number | null
-          perc_groupe?: number | null
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          guild_id?: string
-          perc_entreprise?: number | null
-          perc_groupe?: number | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      blanchiment_rows: {
-        Row: {
-          created_at: string
-          date_recu: string | null
-          date_rendu: string | null
-          donneur_id: string | null
-          duree: number | null
-          employe: string | null
-          entreprise_key: string
-          groupe: string | null
-          guild_id: string
-          id: string
-          recep_id: string | null
-          somme: number | null
-          statut: string | null
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          date_recu?: string | null
-          date_rendu?: string | null
-          donneur_id?: string | null
-          duree?: number | null
-          employe?: string | null
-          entreprise_key: string
-          groupe?: string | null
-          guild_id: string
-          id?: string
-          recep_id?: string | null
-          somme?: number | null
-          statut?: string | null
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          date_recu?: string | null
-          date_rendu?: string | null
-          donneur_id?: string | null
-          duree?: number | null
-          employe?: string | null
-          entreprise_key?: string
-          groupe?: string | null
-          guild_id?: string
-          id?: string
-          recep_id?: string | null
-          somme?: number | null
-          statut?: string | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      blanchiment_settings: {
-        Row: {
-          created_at: string
-          enabled: boolean
-          entreprise_key: string
-          guild_id: string
-          id: string
-          perc_entreprise: number | null
-          perc_groupe: number | null
-          updated_at: string
-          use_global: boolean
-        }
-        Insert: {
-          created_at?: string
-          enabled?: boolean
-          entreprise_key: string
-          guild_id: string
-          id?: string
-          perc_entreprise?: number | null
-          perc_groupe?: number | null
-          updated_at?: string
-          use_global?: boolean
-        }
-        Update: {
-          created_at?: string
-          enabled?: boolean
-          entreprise_key?: string
-          guild_id?: string
-          id?: string
-          perc_entreprise?: number | null
-          perc_groupe?: number | null
-          updated_at?: string
-          use_global?: boolean
-        }
-        Relationships: []
-      }
-      company_configs: {
-        Row: {
-          config: Json
-          created_at: string
-          entreprise_key: string
-          guild_id: string
-          id: string
-          updated_at: string
-        }
-        Insert: {
-          config?: Json
-          created_at?: string
-          entreprise_key: string
-          guild_id: string
-          id?: string
-          updated_at?: string
-        }
-        Update: {
-          config?: Json
-          created_at?: string
-          entreprise_key?: string
-          guild_id?: string
-          id?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      company_prime_tiers: {
-        Row: {
-          created_at: string
-          entreprise_key: string
-          guild_id: string
-          id: string
-          prime: number
-          seuil: number
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          entreprise_key: string
-          guild_id: string
-          id?: string
-          prime: number
-          seuil: number
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          entreprise_key?: string
-          guild_id?: string
-          id?: string
-          prime?: number
-          seuil?: number
-          updated_at?: string
-        }
-        Relationships: []
-      }
       discord_config: {
         Row: {
+          client_id: string | null
           created_at: string
           data: Json
           id: string
+          principal_guild_id: string | null
           updated_at: string
         }
         Insert: {
+          client_id?: string | null
           created_at?: string
           data?: Json
           id?: string
+          principal_guild_id?: string | null
           updated_at?: string
         }
         Update: {
+          client_id?: string | null
           created_at?: string
           data?: Json
           id?: string
+          principal_guild_id?: string | null
           updated_at?: string
         }
         Relationships: []
       }
-      dotation_reports: {
+      employees: {
         Row: {
-          archived_at: string | null
           created_at: string
-          created_by: string | null
-          employees_count: number | null
-          entreprise_key: string
-          guild_id: string
+          enterprise_id: string
+          grade: string
           id: string
-          solde_actuel: number
-          totals: Json | null
+          is_active: boolean
+          profile_id: string
+          salary: number | null
           updated_at: string
         }
         Insert: {
-          archived_at?: string | null
           created_at?: string
-          created_by?: string | null
-          employees_count?: number | null
-          entreprise_key: string
-          guild_id: string
+          enterprise_id: string
+          grade?: string
           id?: string
-          solde_actuel?: number
-          totals?: Json | null
+          is_active?: boolean
+          profile_id: string
+          salary?: number | null
           updated_at?: string
         }
         Update: {
-          archived_at?: string | null
           created_at?: string
-          created_by?: string | null
-          employees_count?: number | null
-          entreprise_key?: string
-          guild_id?: string
+          enterprise_id?: string
+          grade?: string
           id?: string
-          solde_actuel?: number
-          totals?: Json | null
+          is_active?: boolean
+          profile_id?: string
+          salary?: number | null
           updated_at?: string
-        }
-        Relationships: []
-      }
-      dotation_rows: {
-        Row: {
-          ca_total: number
-          facture: number
-          id: string
-          name: string
-          prime: number
-          report_id: string
-          run: number
-          salaire: number
-          vente: number
-        }
-        Insert: {
-          ca_total?: number
-          facture?: number
-          id?: string
-          name: string
-          prime?: number
-          report_id: string
-          run?: number
-          salaire?: number
-          vente?: number
-        }
-        Update: {
-          ca_total?: number
-          facture?: number
-          id?: string
-          name?: string
-          prime?: number
-          report_id?: string
-          run?: number
-          salaire?: number
-          vente?: number
         }
         Relationships: [
           {
-            foreignKeyName: "dotation_rows_report_id_fkey"
-            columns: ["report_id"]
+            foreignKeyName: "employees_enterprise_id_fkey"
+            columns: ["enterprise_id"]
             isOneToOne: false
-            referencedRelation: "dotation_reports"
+            referencedRelation: "enterprises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employees_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
       }
       enterprises: {
         Row: {
+          config: Json
           created_at: string
-          employee_role_id: string | null
-          enterprise_guild_id: string | null
+          discord_guild_id: string | null
+          discord_role_id: string | null
           guild_id: string
           id: string
           key: string
           name: string
-          role_id: string | null
           updated_at: string
         }
         Insert: {
+          config?: Json
           created_at?: string
-          employee_role_id?: string | null
-          enterprise_guild_id?: string | null
+          discord_guild_id?: string | null
+          discord_role_id?: string | null
           guild_id: string
           id?: string
           key: string
           name: string
-          role_id?: string | null
           updated_at?: string
         }
         Update: {
+          config?: Json
           created_at?: string
-          employee_role_id?: string | null
-          enterprise_guild_id?: string | null
+          discord_guild_id?: string | null
+          discord_role_id?: string | null
           guild_id?: string
           id?: string
           key?: string
           name?: string
-          role_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "enterprises_guild_id_fkey"
+            columns: ["guild_id"]
+            isOneToOne: false
+            referencedRelation: "guilds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      guilds: {
+        Row: {
+          config: Json
+          created_at: string
+          discord_id: string
+          icon_url: string | null
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          config?: Json
+          created_at?: string
+          discord_id: string
+          icon_url?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          config?: Json
+          created_at?: string
+          discord_id?: string
+          icon_url?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
           updated_at?: string
         }
         Relationships: []
       }
-      grade_rules: {
+      payroll_entries: {
         Row: {
+          base_salary: number
+          bonus: number
           created_at: string
-          entreprise_key: string
-          grade: string
-          guild_id: string
+          data: Json
+          deductions: number
+          employee_id: string
+          hours_worked: number | null
           id: string
-          pourcentage_ca: number
-          role_discord_id: string | null
-          taux_horaire: number
-          updated_at: string
+          net_amount: number
+          report_id: string
         }
         Insert: {
+          base_salary?: number
+          bonus?: number
           created_at?: string
-          entreprise_key: string
-          grade: string
-          guild_id: string
+          data?: Json
+          deductions?: number
+          employee_id: string
+          hours_worked?: number | null
           id?: string
-          pourcentage_ca?: number
-          role_discord_id?: string | null
-          taux_horaire?: number
-          updated_at?: string
+          net_amount?: number
+          report_id: string
         }
         Update: {
+          base_salary?: number
+          bonus?: number
           created_at?: string
-          entreprise_key?: string
-          grade?: string
-          guild_id?: string
+          data?: Json
+          deductions?: number
+          employee_id?: string
+          hours_worked?: number | null
           id?: string
-          pourcentage_ca?: number
-          role_discord_id?: string | null
-          taux_horaire?: number
-          updated_at?: string
+          net_amount?: number
+          report_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "payroll_entries_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_entries_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "payroll_reports"
+            referencedColumns: ["id"]
+          },
+        ]
       }
-      tax_brackets: {
+      payroll_reports: {
         Row: {
           created_at: string
-          entreprise_key: string
-          guild_id: string
+          created_by: string | null
+          data: Json
+          employee_count: number
+          enterprise_id: string
           id: string
-          max: number | null
-          min: number
-          pr_max_emp: number | null
-          pr_max_pat: number | null
-          pr_min_emp: number | null
-          pr_min_pat: number | null
-          sal_max_emp: number | null
-          sal_max_pat: number | null
-          sal_min_emp: number | null
-          sal_min_pat: number | null
-          taux: number
+          period_end: string
+          period_start: string
+          status: string
+          total_amount: number
           updated_at: string
         }
         Insert: {
           created_at?: string
-          entreprise_key: string
-          guild_id: string
+          created_by?: string | null
+          data?: Json
+          employee_count?: number
+          enterprise_id: string
           id?: string
-          max?: number | null
-          min: number
-          pr_max_emp?: number | null
-          pr_max_pat?: number | null
-          pr_min_emp?: number | null
-          pr_min_pat?: number | null
-          sal_max_emp?: number | null
-          sal_max_pat?: number | null
-          sal_min_emp?: number | null
-          sal_min_pat?: number | null
-          taux: number
+          period_end: string
+          period_start: string
+          status?: string
+          total_amount?: number
           updated_at?: string
         }
         Update: {
           created_at?: string
-          entreprise_key?: string
-          guild_id?: string
+          created_by?: string | null
+          data?: Json
+          employee_count?: number
+          enterprise_id?: string
           id?: string
-          max?: number | null
-          min?: number
-          pr_max_emp?: number | null
-          pr_max_pat?: number | null
-          pr_min_emp?: number | null
-          pr_min_pat?: number | null
-          sal_max_emp?: number | null
-          sal_max_pat?: number | null
-          sal_min_emp?: number | null
-          sal_min_pat?: number | null
-          taux?: number
+          period_end?: string
+          period_start?: string
+          status?: string
+          total_amount?: number
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "payroll_reports_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_reports_enterprise_id_fkey"
+            columns: ["enterprise_id"]
+            isOneToOne: false
+            referencedRelation: "enterprises"
+            referencedColumns: ["id"]
+          },
+        ]
       }
-      wealth_brackets: {
+      profiles: {
         Row: {
+          avatar_url: string | null
           created_at: string
-          entreprise_key: string
-          guild_id: string
+          discord_id: string | null
           id: string
-          max: number | null
-          min: number
-          taux: number
           updated_at: string
+          user_id: string
+          username: string | null
         }
         Insert: {
+          avatar_url?: string | null
           created_at?: string
-          entreprise_key: string
-          guild_id: string
+          discord_id?: string | null
           id?: string
-          max?: number | null
-          min: number
-          taux: number
           updated_at?: string
+          user_id: string
+          username?: string | null
         }
         Update: {
+          avatar_url?: string | null
           created_at?: string
-          entreprise_key?: string
-          guild_id?: string
+          discord_id?: string | null
           id?: string
-          max?: number | null
-          min?: number
-          taux?: number
           updated_at?: string
+          user_id?: string
+          username?: string | null
         }
         Relationships: []
       }
