@@ -346,12 +346,45 @@ export type Database = {
         }
         Relationships: []
       }
+      salary_access_audit: {
+        Row: {
+          accessed_at: string | null
+          enterprise_id: string
+          id: string
+          ip_address: unknown | null
+          operation: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          accessed_at?: string | null
+          enterprise_id: string
+          id?: string
+          ip_address?: unknown | null
+          operation: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          accessed_at?: string | null
+          enterprise_id?: string
+          id?: string
+          ip_address?: unknown | null
+          operation?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      user_can_access_enterprise: {
+        Args: { target_enterprise_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
