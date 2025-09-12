@@ -13,6 +13,8 @@ import { ArrowLeft, Download, FileUp, Save, Shield, Plus, Trash2 } from "lucide-
 import { useToast } from "@/hooks/use-toast";
 import { mockApi, handleApiError } from "@/lib/api";
 import { AdvancedSalaryCalculator } from "@/components/AdvancedSalaryCalculator";
+import { useAuthConsolidated } from "@/hooks/useAuthConsolidated";
+import { AlertTriangle } from "lucide-react";
 
 function useQuery() {
   const { search } = useLocation();
@@ -67,10 +69,31 @@ function mergeCompanyConfig(incoming?: CompanyConfig): CompanyConfig {
 }
 
 export default function CompanyConfigPage() {
+  const { isAuthenticated } = useAuthConsolidated();
   const query = useQuery();
   const navigate = useNavigate();
   const guildId = query.get("guild") || "";
   const [currentRole, setCurrentRole] = useState<Role>("employe");
+
+  // Vérification d'authentification AVANT tout le reste
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="max-w-md">
+          <CardContent className="p-8 text-center">
+            <AlertTriangle className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+            <h3 className="text-lg font-semibold mb-2">Connexion requise</h3>
+            <p className="text-muted-foreground">
+              Vous devez être connecté pour accéder à cette page.
+            </p>
+            <Button className="mt-4" onClick={() => navigate('/auth')}>
+              Se connecter
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   const [employees, setEmployees] = useState<any[]>([]);
   const [cfg, setCfg] = useState<CompanyConfig>(defaultCompanyConfig);
