@@ -42,6 +42,7 @@ export function SuperadminAuth({ onAuthSuccess }: SuperadminAuthProps) {
     targetEmail: ''
   });
 
+  const handleSendCode = async () => {
     setIsLoading(true);
     setError(null);
     
