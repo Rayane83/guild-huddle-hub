@@ -17,13 +17,21 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 const SUPERADMIN_CODE = Deno.env.get('SUPERADMIN_CODE');
 const ADMIN_CODE = Deno.env.get('ADMIN_CODE');
 
-if (!SUPERADMIN_CODE || !ADMIN_CODE) {
-  throw new Error('Les codes d\'accès ne sont pas configurés dans les secrets Supabase');
-}
-
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Vérifier les codes secrets au moment de la requête
+  if (!SUPERADMIN_CODE || !ADMIN_CODE) {
+    console.error('Codes d\'accès manquants dans les secrets Supabase');
+    return new Response(
+      JSON.stringify({ error: 'Configuration des codes d\'accès manquante' }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      }
+    );
   }
 
   try {
@@ -339,7 +347,12 @@ async function handleResetUserPassword(data: any) {
 async function hashPassword(password: string): Promise<string> {
   // Utiliser bcryptjs avec un salt aléatoire pour chaque mot de passe
   const saltRounds = 12; // Coût élevé pour la sécurité
-  return await bcrypt.hash(password, saltRounds);
+  try {
+    return await bcrypt.hash(password, saltRounds);
+  } catch (error) {
+    console.error('Erreur lors du hachage du mot de passe:', error);
+    throw new Error('Erreur lors du hachage du mot de passe');
+  }
 }
 
 async function verifyPassword(password: string, hash: string): Promise<boolean> {

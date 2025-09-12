@@ -39,12 +39,8 @@ export function useSecureAuth() {
           .eq('user_id', session.user.id)
           .single();
 
-        // Récupérer les credentials sécurisées (sans champs sensibles)
-        const { data: credentials, error: credentialsError } = await supabase
-          .from('auth_credentials_safe')
-          .select('*')
-          .eq('user_id', session.user.id)
-          .single();
+        // Récupérer les credentials sécurisées via la fonction sécurisée
+        const { data: credentials, error: credentialsError } = await supabase.rpc('get_my_profile');
 
         if (profileError && profileError.code !== 'PGRST116') {
           console.error('Profile error:', profileError);
@@ -81,9 +77,9 @@ export function useSecureAuth() {
 
         const user: User = {
           id: session.user.id,
-          name: credentials?.unique_id || profile?.username || 'Utilisateur',
+          name: credentials?.[0]?.unique_id || profile?.username || 'Utilisateur',
           avatar: profile?.avatar_url,
-          discriminator: credentials?.unique_id || '',
+          discriminator: credentials?.[0]?.unique_id || '',
         };
 
         setAuthState({

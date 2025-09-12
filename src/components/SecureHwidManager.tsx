@@ -52,11 +52,8 @@ export function SecureHwidManager() {
 
   const loadAuthCredentials = async () => {
     try {
-      // Utiliser la vue sécurisée qui exclut les champs sensibles (password_hash, hwid)
-      const { data, error } = await supabase
-        .from('auth_credentials_safe')
-        .select('id, user_id, unique_id, email, has_hwid_registered, hwid_reset_count, last_hwid_reset, registration_date, is_superstaff')
-        .order('registration_date', { ascending: false });
+      // Utiliser la fonction sécurisée au lieu de la vue directe
+      const { data, error } = await supabase.rpc('list_users_safe');
 
       if (error) {
         throw error;
@@ -64,7 +61,15 @@ export function SecureHwidManager() {
 
       // Adapter les données pour correspondre à l'interface existante
       const adaptedData = (data || []).map(item => ({
-        ...item,
+        id: crypto.randomUUID(), // Générer un ID temporaire pour l'affichage
+        user_id: item.unique_id, // Utiliser unique_id comme identifiant
+        unique_id: item.unique_id,
+        email: item.email,
+        has_hwid_registered: item.has_hwid_registered,
+        hwid_reset_count: 0, // Non disponible dans la fonction sécurisée
+        last_hwid_reset: null, // Non disponible dans la fonction sécurisée
+        registration_date: item.registration_date,
+        is_superstaff: item.is_superstaff,
         hwid: item.has_hwid_registered ? 'PROTECTED_HWID_DATA' : null
       }));
 
