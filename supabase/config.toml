@@ -6,6 +6,12 @@ verify_jwt = false
 [functions.discord-sync]
 verify_jwt = false
 
+[functions.send-auth-code]
+verify_jwt = false
+
+[functions.superadmin-auth]
+verify_jwt = false
+
 [functions.discord-user-roles]
 verify_jwt = false
 

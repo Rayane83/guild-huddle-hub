@@ -336,6 +336,16 @@ export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
           <p className="text-xs text-muted-foreground">
             Un seul appareil par compte. Contactez un superstaff pour changer d'appareil.
           </p>
+          <div className="mt-4">
+            <Button 
+              variant="link" 
+              size="sm"
+              onClick={() => window.location.href = '/superadmin-auth'}
+              className="text-xs"
+            >
+              Connexion Superadmin
+            </Button>
+          </div>
         </div>
       </div>
     </div>

@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 
 // Components
 import { AuthScreen } from '@/components/AuthScreen';
+import { SuperadminAuth } from '@/components/SuperadminAuth';
 import { SEOHead } from '@/components/SEOHead';
 import { RoleGate } from '@/components/RoleGate';
 import { NewDashboard } from '@/components/NewDashboard';
@@ -93,6 +94,21 @@ const Index = () => {
   );
 
   if (!auth.isAuthenticated) {
+    // Vérifier si c'est une connexion superadmin (basé sur l'URL ou un paramètre)
+    const isSupenadminRoute = window.location.pathname === '/superadmin-auth' || window.location.search.includes('superadmin=true');
+    
+    if (isSupenadminRoute || auth.credentials?.is_superstaff) {
+      return (
+        <>
+          <SEOHead 
+            title="Connexion Superadmin - Portail Entreprise Flashback Fa"
+            description="Authentification sécurisée pour les superadministrateurs du portail Flashback Fa."
+          />
+          <SuperadminAuth onAuthSuccess={() => auth.refreshAuth()} />
+        </>
+      );
+    }
+    
     return (
       <>
         <SEOHead 
