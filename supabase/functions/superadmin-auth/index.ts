@@ -204,7 +204,13 @@ async function handleRegisterWithCode(data: any) {
   } else if (accessCode === ADMIN_CODE) {
     isuperstaff = false;
   } else {
-    throw new Error('Code d\'accès invalide');
+    return new Response(JSON.stringify({ 
+      error: 'Code d\'accès invalide',
+      type: 'INVALID_ACCESS_CODE'
+    }), {
+      status: 401,
+      headers: { "Content-Type": "application/json", ...corsHeaders },
+    });
   }
 
   // Vérifier si l'email ou l'uniqueId existe déjà
@@ -216,10 +222,22 @@ async function handleRegisterWithCode(data: any) {
 
   if (existingUser) {
     if (existingUser.email === email) {
-      throw new Error('Cet email est déjà utilisé');
+      return new Response(JSON.stringify({ 
+        error: 'Cet email est déjà utilisé. Essayez de vous connecter à la place.',
+        type: 'EMAIL_ALREADY_EXISTS'
+      }), {
+        status: 409,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
     }
     if (existingUser.unique_id === uniqueId) {
-      throw new Error('Cet ID unique est déjà utilisé');
+      return new Response(JSON.stringify({ 
+        error: 'Cet ID unique est déjà utilisé',
+        type: 'UNIQUE_ID_ALREADY_EXISTS'
+      }), {
+        status: 409,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
     }
   }
 
@@ -231,7 +249,24 @@ async function handleRegisterWithCode(data: any) {
   });
 
   if (authError || !authUser.user) {
-    throw new Error(`Erreur lors de la création du compte: ${authError?.message}`);
+    // Handle specific Supabase Auth errors
+    if (authError?.message?.includes('already been registered')) {
+      return new Response(JSON.stringify({ 
+        error: 'Cet email est déjà enregistré. Essayez de vous connecter à la place.',
+        type: 'EMAIL_ALREADY_EXISTS'
+      }), {
+        status: 409,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+    
+    return new Response(JSON.stringify({ 
+      error: `Erreur lors de la création du compte: ${authError?.message}`,
+      type: 'AUTH_USER_CREATION_FAILED'
+    }), {
+      status: 400,
+      headers: { "Content-Type": "application/json", ...corsHeaders },
+    });
   }
 
   const userId = authUser.user.id;

@@ -130,11 +130,24 @@ export function SuperadminAuth({ onAuthSuccess }: SuperadminAuthProps) {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        // Handle specific error types
+        if (error.type === 'EMAIL_ALREADY_EXISTS') {
+          setError('Cet email est déjà enregistré. Essayez de vous connecter dans l\'onglet "Connexion".');
+        } else if (error.type === 'UNIQUE_ID_ALREADY_EXISTS') {
+          setError('Cet ID unique est déjà utilisé. Veuillez en choisir un autre.');
+        } else if (error.type === 'INVALID_ACCESS_CODE') {
+          setError('Code d\'accès invalide. Contactez un superadmin pour obtenir le bon code.');
+        } else {
+          setError(error.error || error.message || 'Erreur lors de l\'inscription');
+        }
+        return;
+      }
 
       toast({
         title: "Inscription réussie",
         description: data.message || "Compte créé avec succès !",
+        variant: "default",
       });
 
       // Reset form
@@ -148,7 +161,17 @@ export function SuperadminAuth({ onAuthSuccess }: SuperadminAuthProps) {
       });
     } catch (err: any) {
       console.error('Register error:', err);
-      setError(err.message || 'Erreur lors de l\'inscription');
+      
+      // Handle network or parsing errors
+      if (err.message?.includes('EMAIL_ALREADY_EXISTS')) {
+        setError('Cet email est déjà enregistré. Essayez de vous connecter dans l\'onglet "Connexion".');
+      } else if (err.message?.includes('UNIQUE_ID_ALREADY_EXISTS')) {
+        setError('Cet ID unique est déjà utilisé. Veuillez en choisir un autre.');
+      } else if (err.message?.includes('INVALID_ACCESS_CODE')) {
+        setError('Code d\'accès invalide. Contactez un superadmin pour obtenir le bon code.');
+      } else {
+        setError(err.message || 'Erreur lors de l\'inscription');
+      }
     } finally {
       setIsLoading(false);
     }
