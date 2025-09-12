@@ -39,9 +39,9 @@ export function useSecureAuth() {
           .eq('user_id', session.user.id)
           .single();
 
-        // Récupérer les credentials (données sensibles) - seulement pour l'utilisateur actuel
+        // Récupérer les credentials sécurisées (sans champs sensibles)
         const { data: credentials, error: credentialsError } = await supabase
-          .from('auth_credentials')
+          .from('auth_credentials_safe')
           .select('*')
           .eq('user_id', session.user.id)
           .single();
@@ -59,9 +59,8 @@ export function useSecureAuth() {
         // Vérifier le HWID si les credentials existent
         if (credentials) {
           const currentHwid = await getCurrentHwid();
-          const { data: hwidCheck } = await supabase.rpc('check_hwid_access_secure', {
-            target_hwid: currentHwid,
-            target_user_id: session.user.id
+          const { data: hwidCheck } = await supabase.rpc('verify_user_hwid_secure', {
+            target_hwid: currentHwid
           });
 
           if (hwidCheck && typeof hwidCheck === 'object' && 'allowed' in hwidCheck && !hwidCheck.allowed) {

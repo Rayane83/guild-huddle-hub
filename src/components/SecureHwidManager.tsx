@@ -52,17 +52,23 @@ export function SecureHwidManager() {
 
   const loadAuthCredentials = async () => {
     try {
-      // Les superstaff peuvent voir toutes les credentials grâce aux politiques RLS
+      // Utiliser la vue sécurisée qui exclut les champs sensibles (password_hash, hwid)
       const { data, error } = await supabase
-        .from('auth_credentials')
-        .select('id, user_id, unique_id, email, hwid, hwid_reset_count, last_hwid_reset, registration_date, is_superstaff')
+        .from('auth_credentials_safe')
+        .select('id, user_id, unique_id, email, has_hwid_registered, hwid_reset_count, last_hwid_reset, registration_date, is_superstaff')
         .order('registration_date', { ascending: false });
 
       if (error) {
         throw error;
       }
 
-      setAuthCredentials(data || []);
+      // Adapter les données pour correspondre à l'interface existante
+      const adaptedData = (data || []).map(item => ({
+        ...item,
+        hwid: item.has_hwid_registered ? 'PROTECTED_HWID_DATA' : null
+      }));
+
+      setAuthCredentials(adaptedData);
     } catch (error) {
       console.error('Error loading auth credentials:', error);
       toast({
@@ -227,7 +233,7 @@ export function SecureHwidManager() {
               <Shield className="w-5 h-5 text-green-500" />
               <div>
                 <p className="text-sm text-muted-foreground">HWID Enregistrés</p>
-                <p className="text-2xl font-bold">{authCredentials.filter(c => c.hwid).length}</p>
+                <p className="text-2xl font-bold">{authCredentials.filter(c => c.hwid && c.hwid !== null).length}</p>
               </div>
             </div>
           </CardContent>
@@ -312,18 +318,18 @@ export function SecureHwidManager() {
                     <TableCell>
                       <div className="font-mono text-sm">{credential.email}</div>
                     </TableCell>
-                    <TableCell>
-                      {credential.hwid ? (
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="font-mono text-xs">
-                            {credential.hwid.substring(0, 8)}...
-                          </Badge>
-                          <CheckCircle className="w-4 h-4 text-green-500" />
-                        </div>
-                      ) : (
-                        <Badge variant="secondary">Non défini</Badge>
-                      )}
-                    </TableCell>
+                     <TableCell>
+                       {credential.hwid ? (
+                         <div className="flex items-center gap-2">
+                           <Badge variant="outline" className="font-mono text-xs">
+                             [PROTECTED]
+                           </Badge>
+                           <CheckCircle className="w-4 h-4 text-green-500" />
+                         </div>
+                       ) : (
+                         <Badge variant="secondary">Non défini</Badge>
+                       )}
+                     </TableCell>
                     <TableCell>
                       <div>
                         <div className="font-medium">{credential.hwid_reset_count || 0}</div>
