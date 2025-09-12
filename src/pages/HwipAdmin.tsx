@@ -1,5 +1,5 @@
 import { SEOHead } from '@/components/SEOHead';
-import { HwipManager } from '@/components/HwipManager';
+import { HwidManager } from '@/components/HwidManager';
 import { useCustomAuth } from '@/hooks/useCustomAuth';
 import { Card, CardContent } from '@/components/ui/card';
 import { AlertTriangle } from 'lucide-react';
@@ -37,7 +37,7 @@ export default function HwipAdminPage() {
         />
       <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-8">
-          <HwipManager />
+          <HwidManager />
         </div>
       </div>
     </>
