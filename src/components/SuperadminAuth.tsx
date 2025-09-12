@@ -63,7 +63,15 @@ export function SuperadminAuth({ onAuthSuccess }: SuperadminAuthProps) {
       });
     } catch (err: any) {
       console.error('Send code error:', err);
-      setError(err.message || 'Erreur lors de l\'envoi du code');
+      let msg = err?.message || 'Erreur lors de l\'envoi du code';
+      const body = err?.context?.body;
+      try {
+        const parsed = typeof body === 'string' ? JSON.parse(body) : body;
+        if (parsed?.error) msg = parsed.error;
+        if (parsed?.type === 'EMAIL_NOT_FOUND') msg = 'Email non trouvé';
+        if (parsed?.type === 'NOT_SUPERADMIN') msg = 'Accès réservé aux superadmins';
+      } catch {}
+      setError(msg);
     } finally {
       setIsLoading(false);
     }
@@ -98,7 +106,16 @@ export function SuperadminAuth({ onAuthSuccess }: SuperadminAuthProps) {
       onAuthSuccess();
     } catch (err: any) {
       console.error('Verify code error:', err);
-      setError(err.message || 'Code ou mot de passe incorrect');
+      let msg = err?.message || 'Code ou mot de passe incorrect';
+      const body = err?.context?.body;
+      try {
+        const parsed = typeof body === 'string' ? JSON.parse(body) : body;
+        if (parsed?.error) msg = parsed.error;
+        if (parsed?.type === 'INVALID_CODE') msg = 'Code invalide ou expiré';
+        if (parsed?.type === 'INVALID_PASSWORD') msg = 'Mot de passe incorrect';
+        if (parsed?.type === 'USER_NOT_FOUND') msg = 'Utilisateur non trouvé';
+      } catch {}
+      setError(msg);
     } finally {
       setIsLoading(false);
     }
