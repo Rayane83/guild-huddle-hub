@@ -256,11 +256,84 @@ async function handleRegisterWithCode(data: any) {
   if (authError || !authUser.user) {
     // Handle specific Supabase Auth errors
     if (authError?.message?.includes('already been registered')) {
+      // L'utilisateur existe déjà dans auth.users -> créer/mettre à jour les credentials et le profil
+      // Récupérer l'user_id via la table profiles (service role contourne les RLS)
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('email', email)
+        .single();
+
+      const existingUserId = existingProfile?.user_id;
+
+      if (!existingUserId) {
+        return new Response(JSON.stringify({ 
+          error: "Cet email existe déjà, mais le profil n'est pas initialisé. Contactez un administrateur.",
+          type: 'EMAIL_EXISTS_NO_PROFILE'
+        }), {
+          status: 409,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        });
+      }
+
+      // Hasher le mot de passe et (upsert manuel) des credentials
+      const passwordHashExisting = await hashPassword(password);
+
+      const { data: existingCred } = await supabase
+        .from('auth_credentials')
+        .select('id')
+        .eq('user_id', existingUserId)
+        .single();
+
+      if (existingCred) {
+        const { error: updErr } = await supabase
+          .from('auth_credentials')
+          .update({
+            email,
+            unique_id: uniqueId,
+            password_hash: passwordHashExisting,
+            is_superstaff: isuperstaff,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', existingCred.id);
+        if (updErr) {
+          throw new Error(`Erreur mise à jour credentials existants: ${updErr.message}`);
+        }
+      } else {
+        const { error: insErr } = await supabase
+          .from('auth_credentials')
+          .insert({
+            user_id: existingUserId,
+            email,
+            unique_id: uniqueId,
+            password_hash: passwordHashExisting,
+            is_superstaff: isuperstaff,
+            registration_date: new Date().toISOString(),
+          });
+        if (insErr) {
+          throw new Error(`Erreur création credentials: ${insErr.message}`);
+        }
+      }
+
+      // S'assurer que le profil est créé/mis à jour
+      const { error: upProfileErr } = await supabase
+        .from('profiles')
+        .upsert({
+          user_id: existingUserId,
+          username: uniqueId,
+          discord_id: discordId,
+          email,
+        }, { onConflict: 'user_id' });
+      if (upProfileErr) {
+        console.error('Erreur lors de la mise à jour du profil:', upProfileErr);
+      }
+
       return new Response(JSON.stringify({ 
-        error: 'Cet email est déjà enregistré. Essayez de vous connecter à la place.',
-        type: 'EMAIL_ALREADY_EXISTS'
+        success: true,
+        message: `Compte ${isuperstaff ? 'superadmin' : 'admin'} mis à jour avec succès`,
+        user: { id: existingUserId, email, uniqueId, isuperstaff }
       }), {
-        status: 409,
+        status: 200,
         headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
