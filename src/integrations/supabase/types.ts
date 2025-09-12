@@ -205,6 +205,47 @@ export type Database = {
         }
         Relationships: []
       }
+      hwip_audit: {
+        Row: {
+          attempted_at: string | null
+          created_at: string | null
+          hwip: string
+          id: string
+          profile_id: string | null
+          reason: string | null
+          success: boolean | null
+          user_agent: string | null
+        }
+        Insert: {
+          attempted_at?: string | null
+          created_at?: string | null
+          hwip: string
+          id?: string
+          profile_id?: string | null
+          reason?: string | null
+          success?: boolean | null
+          user_agent?: string | null
+        }
+        Update: {
+          attempted_at?: string | null
+          created_at?: string | null
+          hwip?: string
+          id?: string
+          profile_id?: string | null
+          reason?: string | null
+          success?: boolean | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hwip_audit_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payroll_entries: {
         Row: {
           base_salary: number
@@ -321,7 +362,15 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           discord_id: string | null
+          email: string | null
+          hwip: string | null
+          hwip_reset_count: number | null
           id: string
+          is_superstaff: boolean | null
+          last_hwip_reset: string | null
+          password_hash: string | null
+          registration_date: string | null
+          unique_id: string | null
           updated_at: string
           user_id: string
           username: string | null
@@ -330,7 +379,15 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           discord_id?: string | null
+          email?: string | null
+          hwip?: string | null
+          hwip_reset_count?: number | null
           id?: string
+          is_superstaff?: boolean | null
+          last_hwip_reset?: string | null
+          password_hash?: string | null
+          registration_date?: string | null
+          unique_id?: string | null
           updated_at?: string
           user_id: string
           username?: string | null
@@ -339,7 +396,15 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           discord_id?: string | null
+          email?: string | null
+          hwip?: string | null
+          hwip_reset_count?: number | null
           id?: string
+          is_superstaff?: boolean | null
+          last_hwip_reset?: string | null
+          password_hash?: string | null
+          registration_date?: string | null
+          unique_id?: string | null
           updated_at?: string
           user_id?: string
           username?: string | null
@@ -381,6 +446,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_hwip_access: {
+        Args: { target_hwip: string; target_profile_id: string }
+        Returns: Json
+      }
+      reset_hwip: {
+        Args: { target_profile_id: string }
+        Returns: Json
+      }
       user_can_access_enterprise: {
         Args: { target_enterprise_id: string }
         Returns: boolean

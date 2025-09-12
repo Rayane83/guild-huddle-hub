@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 // Components
-import { LoginScreen } from '@/components/LoginScreen';
+import { AuthScreen } from '@/components/AuthScreen';
 import { SEOHead } from '@/components/SEOHead';
 import { RoleGate } from '@/components/RoleGate';
 import { NewDashboard } from '@/components/NewDashboard';
@@ -18,7 +18,8 @@ import { DocsUpload } from '@/components/DocsUpload';
 import { StaffConfig } from '@/components/StaffConfig';
 
 // Hooks
-import { useAuth, useGuilds, useGuildRoles } from '@/hooks';
+import { useCustomAuth } from '@/hooks/useCustomAuth';
+import { useGuilds, useGuildRoles } from '@/hooks';
 import { useConfigSync } from '@/hooks/useConfigSync';
 
 // Utils
@@ -52,7 +53,7 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 
 const Index = () => {
   // Custom hooks for clean state management
-  const auth = useAuth();
+  const auth = useCustomAuth();
   const guilds = useGuilds();
   const guildRoles = useGuildRoles(guilds.selectedGuildId);
   
@@ -96,9 +97,33 @@ const Index = () => {
       <>
         <SEOHead 
           title="Connexion - Portail Entreprise Flashback Fa"
-          description="Connectez-vous au portail de gestion des entreprises Discord avec votre compte Discord."
+          description="Connectez-vous au portail de gestion des entreprises Discord avec votre compte personnalisé."
         />
-        <LoginScreen onLogin={auth.signInWithDiscord} />
+        <AuthScreen onAuthSuccess={() => auth.refreshAuth()} />
+      </>
+    );
+  }
+  
+  if (auth.isHwipBlocked) {
+    return (
+      <>
+        <SEOHead 
+          title="Accès bloqué - Portail Entreprise Flashback Fa"
+          description="Votre appareil n'est pas autorisé à accéder au portail."
+        />
+        <div className="min-h-screen bg-hero-pro flex items-center justify-center p-4">
+          <div className="text-center space-y-4">
+            <Shield className="w-16 h-16 mx-auto text-destructive" />
+            <h1 className="text-2xl font-bold text-destructive">Accès bloqué</h1>
+            <p className="text-muted-foreground max-w-md">
+              Votre appareil n'est pas autorisé à accéder au portail. 
+              Contactez un superstaff pour réinitialiser votre HWIP.
+            </p>
+            <Button onClick={auth.signOut} variant="outline">
+              Retour à la connexion
+            </Button>
+          </div>
+        </div>
       </>
     );
   }
@@ -173,6 +198,11 @@ const Index = () => {
                     <RoleGate allow={(role) => role === 'staff'} currentRole={guildRoles.currentRole}>
                       <DropdownMenuItem asChild>
                         <Link to="/superadmin">Espace Superadmin</Link>
+                      </DropdownMenuItem>
+                    </RoleGate>
+                    <RoleGate allow={() => auth.profile?.is_superstaff === true} currentRole={guildRoles.currentRole}>
+                      <DropdownMenuItem asChild>
+                        <Link to="/hwip-admin">Gestion HWIP</Link>
                       </DropdownMenuItem>
                     </RoleGate>
                     <RoleGate allow={canAccessStaffConfig} currentRole={guildRoles.currentRole}>
