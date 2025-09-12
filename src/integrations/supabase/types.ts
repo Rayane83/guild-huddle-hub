@@ -595,6 +595,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_current_user_superadmin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       list_users_safe: {
         Args: Record<PropertyKey, never>
         Returns: {

@@ -1,13 +1,23 @@
+import React from 'react';
 import { SEOHead } from '@/components/SEOHead';
-import { SecureHwidManager } from '@/components/SecureHwidManager';
-import { useSecureAuth } from '@/hooks/useSecureAuth';
+import { SecureAuthManager } from '@/components/SecureAuthManager';
+import { useAuthConsolidated } from '@/hooks/useAuthConsolidated';
 import { Card, CardContent } from '@/components/ui/card';
 import { AlertTriangle } from 'lucide-react';
 
 export default function HwipAdminPage() {
-  const { isAuthenticated, credentials } = useSecureAuth();
+  const { isAuthenticated, isSuperadmin } = useAuthConsolidated();
 
-  if (!isAuthenticated || !credentials?.is_superstaff) {
+  // Vérifier de manière asynchrone si l'utilisateur est superadmin
+  const [isSuperadminStatus, setIsSuperadminStatus] = React.useState<boolean | null>(null);
+  
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      isSuperadmin().then(setIsSuperadminStatus);
+    }
+  }, [isAuthenticated, isSuperadmin]);
+
+  if (!isAuthenticated || isSuperadminStatus === false) {
     return (
       <>
         <SEOHead 
@@ -37,7 +47,7 @@ export default function HwipAdminPage() {
         />
       <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-8">
-          <SecureHwidManager />
+          <SecureAuthManager />
         </div>
       </div>
     </>

@@ -24,7 +24,12 @@ interface AuthState {
   isAuthenticated: boolean;
 }
 
-export function useStandardAuth() {
+/**
+ * Hook d'authentification consolidé et sécurisé
+ * Remplace les anciens useStandardAuth et useSecureAuth
+ * Utilise uniquement l'authentification Supabase standard avec gestion des rôles sécurisée
+ */
+export function useAuthConsolidated() {
   const [state, setState] = useState<AuthState>({
     user: null,
     session: null,
@@ -38,12 +43,12 @@ export function useStandardAuth() {
     try {
       const { data, error } = await supabase.rpc('get_user_highest_role', { _user_id: userId });
       if (error) {
-        console.error('Error fetching user role:', error);
+        console.error('Erreur lors de la récupération du rôle:', error);
         return 'user';
       }
       return data || 'user';
     } catch (error) {
-      console.error('Error in fetchUserRole:', error);
+      console.error('Erreur dans fetchUserRole:', error);
       return 'user';
     }
   }, []);
@@ -57,36 +62,19 @@ export function useStandardAuth() {
         .single();
       
       if (error) {
-        console.error('Error fetching profile:', error);
+        console.error('Erreur lors de la récupération du profil:', error);
         return null;
       }
       return data;
     } catch (error) {
-      console.error('Error in fetchProfile:', error);
+      console.error('Erreur dans fetchProfile:', error);
       return null;
     }
   }, []);
 
   const updateAuthState = useCallback(async (session: Session | null) => {
     if (session?.user) {
-      // Defer role and profile fetching to avoid potential deadlocks
-      setTimeout(async () => {
-        const [userRole, profile] = await Promise.all([
-          fetchUserRole(session.user.id),
-          fetchProfile(session.user.id)
-        ]);
-        
-        setState({
-          user: session.user,
-          session,
-          profile,
-          userRole,
-          isLoading: false,
-          isAuthenticated: true,
-        });
-      }, 0);
-      
-      // Set immediate state without role/profile
+      // Mise à jour immédiate avec les données de base
       setState(prev => ({
         ...prev,
         user: session.user,
@@ -94,6 +82,24 @@ export function useStandardAuth() {
         isLoading: false,
         isAuthenticated: true,
       }));
+      
+      // Récupération différée des données supplémentaires pour éviter les blocages
+      setTimeout(async () => {
+        try {
+          const [userRole, profile] = await Promise.all([
+            fetchUserRole(session.user.id),
+            fetchProfile(session.user.id)
+          ]);
+          
+          setState(prev => ({
+            ...prev,
+            profile,
+            userRole,
+          }));
+        } catch (error) {
+          console.error('Erreur lors de la mise à jour des données utilisateur:', error);
+        }
+      }, 0);
     } else {
       setState({
         user: null,
@@ -107,14 +113,15 @@ export function useStandardAuth() {
   }, [fetchUserRole, fetchProfile]);
 
   useEffect(() => {
-    // Set up auth state listener
+    // Configuration de l'écoute des changements d'état d'authentification
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        console.log('Changement d\'état d\'authentification:', event);
         updateAuthState(session);
       }
     );
 
-    // Get initial session
+    // Récupération de la session initiale
     supabase.auth.getSession().then(({ data: { session } }) => {
       updateAuthState(session);
     });
@@ -154,7 +161,7 @@ export function useStandardAuth() {
   }, []);
 
   const updateProfile = useCallback(async (updates: Partial<Profile>) => {
-    if (!state.user) return { error: new Error('Not authenticated') };
+    if (!state.user) return { error: new Error('Non authentifié') };
     
     const { data, error } = await supabase
       .from('profiles')
@@ -186,7 +193,6 @@ export function useStandardAuth() {
     return { error };
   }, [state.userRole, state.user?.id]);
 
-  // Fonction sécurisée pour vérifier si l'utilisateur est superadmin
   const isSuperadmin = useCallback(async (): Promise<boolean> => {
     try {
       const { data, error } = await supabase.rpc('is_current_user_superadmin');

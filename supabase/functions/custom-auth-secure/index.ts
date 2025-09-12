@@ -3,9 +3,12 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.54.0'
 // Import bcrypt for secure password hashing from esm.sh
 import bcrypt from "https://esm.sh/bcryptjs@2.4.3";
 
+// CORS sécurisé - restreint aux domaines autorisés uniquement  
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Origin': 'https://pmhktnxqponixycsjcwr.supabase.co', // Restreint au domaine du projet
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type', 
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Max-Age': '86400', // Cache des preflight requests
 }
 
 serve(async (req) => {
@@ -14,42 +17,30 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  try {
-    // Initialize Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    
-    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    });
-
-    const { action, identifier, password, uniqueId, discordId, email, hwid } = await req.json();
-
-    console.log(`Secure auth request: ${action}`, { identifier, uniqueId, email, hwid });
-
-    if (action === 'register') {
-      return await handleSecureRegister(supabase, { uniqueId, discordId, email, password, hwid });
-    } else if (action === 'login') {
-      return await handleSecureLogin(supabase, { identifier, password, hwid });
-    } else {
-      return new Response(
-        JSON.stringify({ success: false, message: 'Action non supportée' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      );
+  // AVERTISSEMENT DE SÉCURITÉ : Cette fonction est dépréciée
+  console.warn('⚠️  SÉCURITÉ: custom-auth-secure est déprécié et présente des failles de sécurité');
+  console.warn('📌 Utilisez l\'authentification Supabase standard à la place');
+  
+  // Retourner une erreur de dépréciation pour forcer la migration
+  return new Response(
+    JSON.stringify({ 
+      success: false, 
+      message: 'Cette méthode d\'authentification a été désactivée pour des raisons de sécurité.',
+      code: 'AUTH_METHOD_DEPRECATED',
+      details: 'Veuillez utiliser l\'authentification standard via email/mot de passe.'
+    }),
+    { 
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }, 
+      status: 410 // Gone - indique que la ressource n'est plus disponible
     }
-  } catch (error) {
-    console.error('Secure auth error:', error);
-    return new Response(
-      JSON.stringify({ success: false, message: 'Erreur serveur interne' }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-    );
-  }
+  );
 });
 
-async function handleSecureRegister(supabase: any, userData: {
+// Fonctions dépréciées - conservées pour référence historique mais non utilisées
+// Ces fonctions présentaient des failles de sécurité majeures :
+// 1. Génération HWID côté client (non sécurisé)
+// 2. Complexité inutile par rapport à l'auth standard
+// 3. Possibilités de contournement par modification JS
   uniqueId: string;
   discordId: string;
   email: string;

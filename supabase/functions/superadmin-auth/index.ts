@@ -3,10 +3,12 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.54.0";
 // Import bcrypt for secure password hashing from esm.sh
 import bcrypt from "https://esm.sh/bcryptjs@2.4.3";
 
+// CORS sécurisé - restreint aux domaines autorisés uniquement
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Origin": "https://pmhktnxqponixycsjcwr.supabase.co", // Restreint au domaine du projet
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Max-Age": "86400", // Cache des preflight requests
 };
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;

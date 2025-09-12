@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useStandardAuth, UserRole } from '@/hooks/useStandardAuth';
+import { useAuthConsolidated, UserRole } from '@/hooks/useAuthConsolidated';
 import { Loader2 } from 'lucide-react';
 
 interface ProtectedRouteProps {
@@ -14,7 +14,7 @@ export function ProtectedRoute({
   requireRole,
   fallbackPath = '/auth' 
 }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading, userRole } = useStandardAuth();
+  const { isAuthenticated, isLoading, userRole } = useAuthConsolidated();
   const location = useLocation();
 
   if (isLoading) {
