@@ -98,6 +98,33 @@ export type Database = {
         }
         Relationships: []
       }
+      auth_temp_codes: {
+        Row: {
+          code: string
+          created_at: string | null
+          email: string
+          expires_at: string | null
+          id: string
+          used: boolean | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          email: string
+          expires_at?: string | null
+          id?: string
+          used?: boolean | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          email?: string
+          expires_at?: string | null
+          id?: string
+          used?: boolean | null
+        }
+        Relationships: []
+      }
       discord_config: {
         Row: {
           client_id: string | null
@@ -532,6 +559,10 @@ export type Database = {
       check_hwip_access: {
         Args: { target_hwip: string; target_profile_id: string }
         Returns: Json
+      }
+      cleanup_expired_codes: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       get_safe_user_credentials: {
         Args: { target_user_id?: string }

@@ -1,5 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.54.0'
+// Import bcrypt for secure password hashing
+import * as bcrypt from "https://deno.land/x/bcrypt@v0.4.0/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -268,17 +270,18 @@ async function handleSecureLogin(supabase: any, loginData: {
   }
 }
 
-// Fonctions utilitaires pour le hachage de mot de passe (identiques)
+// Fonctions utilitaires pour le hachage de mot de passe avec bcrypt
 async function hashPassword(password: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password + 'salt_flashback_fa_secure'); // Salt sécurisé
-  const hash = await crypto.subtle.digest('SHA-256', data);
-  return Array.from(new Uint8Array(hash))
-    .map(b => b.toString(16).padStart(2, '0'))
-    .join('');
+  // Utiliser bcrypt avec un salt aléatoire pour chaque mot de passe
+  const saltRounds = 12; // Coût élevé pour la sécurité
+  return await bcrypt.hash(password, saltRounds);
 }
 
 async function verifyPassword(password: string, hash: string): Promise<boolean> {
-  const computedHash = await hashPassword(password);
-  return computedHash === hash;
+  try {
+    return await bcrypt.compare(password, hash);
+  } catch (error) {
+    console.error('Erreur lors de la vérification du mot de passe:', error);
+    return false;
+  }
 }

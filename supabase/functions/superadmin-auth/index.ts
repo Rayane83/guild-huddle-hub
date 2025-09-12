@@ -1,5 +1,5 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.54.0";
+// Import bcrypt for secure password hashing
+import * as bcrypt from "https://deno.land/x/bcrypt@v0.4.0/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,12 +11,13 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-// Codes secrets pour l'inscription
-const SUPERADMIN_CODE = "r_RU<1j$;5m8:=|D/0f~o>t~Q~I^1wKj)IIu~EB_KHe%+:>/pLN(bkLJS^S;@...AnRfeKT8wild[o-M=y<hE&CM071g&jn.VC0ug<6_uGBNsDeJm26lT!g&P9_tT";
-const ADMIN_CODE = "Xx!5R$A3bN=G}oZJ7yq<eU0?m@tD1p^s~Wz9F+K%hC*V>8uO)f&nQ6j|l[2rS:kYdM_E#TwZaLgB4vP;HiJcXRU7$N!5m@2Fh-0V^oQn]9zD*+p|y<K%";
+// Codes secrets pour l'inscription (depuis les secrets Supabase)
+const SUPERADMIN_CODE = Deno.env.get('SUPERADMIN_CODE');
+const ADMIN_CODE = Deno.env.get('ADMIN_CODE');
 
-// Store des codes temporaires (en production, utiliser Redis ou une DB)
-const tempCodes = new Map<string, { email: string; timestamp: number }>();
+if (!SUPERADMIN_CODE || !ADMIN_CODE) {
+  throw new Error('Les codes d\'accès ne sont pas configurés dans les secrets Supabase');
+}
 
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
@@ -71,8 +72,22 @@ async function handleSendLoginCode(data: any) {
   // Générer un code à 6 chiffres
   const code = Math.floor(100000 + Math.random() * 900000).toString();
   
-  // Stocker le code temporairement (10 minutes)
-  tempCodes.set(email, { email, timestamp: Date.now() });
+  // Nettoyer les anciens codes expirés
+  await supabase.rpc('cleanup_expired_codes');
+  
+  // Stocker le code dans la base de données de manière sécurisée
+  const { error: insertError } = await supabase
+    .from('auth_temp_codes')
+    .insert({
+      email,
+      code,
+      expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString() // 10 minutes
+    });
+
+  if (insertError) {
+    console.error('Erreur lors du stockage du code:', insertError);
+    throw new Error('Erreur lors de la génération du code');
+  }
 
   // Envoyer l'email via la fonction send-auth-code
   const { error } = await supabase.functions.invoke('send-auth-code', {
@@ -84,11 +99,13 @@ async function handleSendLoginCode(data: any) {
   });
 
   if (error) {
+    // Nettoyer le code si l'envoi d'email échoue
+    await supabase
+      .from('auth_temp_codes')
+      .delete()
+      .eq('code', code);
     throw new Error('Erreur lors de l\'envoi de l\'email');
   }
-
-  // Stocker le code avec l'email
-  tempCodes.set(code, { email, timestamp: Date.now() });
 
   return new Response(JSON.stringify({ 
     success: true, 
@@ -102,15 +119,18 @@ async function handleSendLoginCode(data: any) {
 async function handleVerifyLoginCode(data: any) {
   const { email, code, password } = data;
 
-  // Vérifier si le code existe et n'est pas expiré (10 minutes)
-  const codeData = tempCodes.get(code);
-  if (!codeData || codeData.email !== email) {
-    throw new Error('Code invalide ou expiré');
-  }
+  // Vérifier le code dans la base de données
+  const { data: codeData, error: codeError } = await supabase
+    .from('auth_temp_codes')
+    .select('*')
+    .eq('code', code)
+    .eq('email', email)
+    .eq('used', false)
+    .gt('expires_at', new Date().toISOString())
+    .single();
 
-  if (Date.now() - codeData.timestamp > 10 * 60 * 1000) {
-    tempCodes.delete(code);
-    throw new Error('Code expiré');
+  if (codeError || !codeData) {
+    throw new Error('Code invalide ou expiré');
   }
 
   // Vérifier le mot de passe
@@ -124,14 +144,17 @@ async function handleVerifyLoginCode(data: any) {
     throw new Error('Utilisateur non trouvé');
   }
 
-  // Vérifier le mot de passe
+  // Vérifier le mot de passe avec bcrypt
   const isValidPassword = await verifyPassword(password, credentials.password_hash);
   if (!isValidPassword) {
     throw new Error('Mot de passe incorrect');
   }
 
-  // Supprimer le code utilisé
-  tempCodes.delete(code);
+  // Marquer le code comme utilisé
+  await supabase
+    .from('auth_temp_codes')
+    .update({ used: true })
+    .eq('id', codeData.id);
 
   // Créer une session Supabase
   const { data: authData, error: authError } = await supabase.auth.admin.generateLink({
@@ -312,16 +335,18 @@ async function handleResetUserPassword(data: any) {
 }
 
 async function hashPassword(password: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password + 'flashback_salt_2024');
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  // Utiliser bcrypt avec un salt aléatoire pour chaque mot de passe
+  const saltRounds = 12; // Coût élevé pour la sécurité
+  return await bcrypt.hash(password, saltRounds);
 }
 
 async function verifyPassword(password: string, hash: string): Promise<boolean> {
-  const hashedInput = await hashPassword(password);
-  return hashedInput === hash;
+  try {
+    return await bcrypt.compare(password, hash);
+  } catch (error) {
+    console.error('Erreur lors de la vérification du mot de passe:', error);
+    return false;
+  }
 }
 
 serve(handler);
