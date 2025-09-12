@@ -3,10 +3,9 @@ import { Tabs, TabsContent, TabsList } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Link } from "react-router-dom";
 
 // Components
-import { AuthScreen } from '@/components/AuthScreen';
-import { SuperadminAuth } from '@/components/SuperadminAuth';
 import { SEOHead } from '@/components/SEOHead';
 import { RoleGate } from '@/components/RoleGate';
 import { NewDashboard } from '@/components/NewDashboard';
@@ -19,7 +18,7 @@ import { DocsUpload } from '@/components/DocsUpload';
 import { StaffConfig } from '@/components/StaffConfig';
 
 // Hooks
-import { useSecureAuth } from '@/hooks/useSecureAuth';
+import { useStandardAuth, UserRole } from '@/hooks/useStandardAuth';
 import { useGuilds, useGuildRoles } from '@/hooks';
 import { useConfigSync } from '@/hooks/useConfigSync';
 
@@ -49,12 +48,11 @@ import {
   Settings as SettingsIcon
 } from 'lucide-react';
 
-import { Link } from 'react-router-dom';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 
 const Index = () => {
   // Custom hooks for clean state management
-  const auth = useSecureAuth();
+  const auth = useStandardAuth();
   const guilds = useGuilds();
   const guildRoles = useGuildRoles(guilds.selectedGuildId);
   
@@ -93,54 +91,50 @@ const Index = () => {
     [auth.isLoading, guilds.isLoading, guildRoles.isLoading]
   );
 
-  if (!auth.isAuthenticated) {
-    // Vérifier si c'est une connexion superadmin (basé sur l'URL ou un paramètre)
-    const isSupenadminRoute = window.location.pathname === '/superadmin-auth' || window.location.search.includes('superadmin=true');
-    
-    if (isSupenadminRoute || auth.credentials?.is_superstaff) {
-      return (
-        <>
-          <SEOHead 
-            title="Connexion Superadmin - Portail Entreprise Flashback Fa"
-            description="Authentification sécurisée pour les superadministrateurs du portail Flashback Fa."
-          />
-          <SuperadminAuth onAuthSuccess={() => auth.refreshAuth()} />
-        </>
-      );
+  // Map UserRole to legacy role system for compatibility
+  const legacyRole = useMemo(() => {
+    switch (auth.userRole) {
+      case 'superadmin': return 'staff';
+      case 'admin': return 'patron';  
+      default: return 'employe';
     }
-    
+  }, [auth.userRole]);
+
+  if (!auth.isAuthenticated) {
     return (
-      <>
-        <SEOHead 
-          title="Connexion - Portail Entreprise Flashback Fa"
-          description="Connectez-vous au portail de gestion des entreprises Discord avec votre compte personnalisé."
-        />
-        <AuthScreen onAuthSuccess={() => auth.refreshAuth()} />
-      </>
-    );
-  }
-  
-  if (auth.isHwidBlocked) {
-    return (
-      <>
-        <SEOHead 
-          title="Accès bloqué - Portail Entreprise Flashback Fa"
-          description="Votre appareil n'est pas autorisé à accéder au portail."
-        />
-        <div className="min-h-screen bg-hero-pro flex items-center justify-center p-4">
-          <div className="text-center space-y-4">
-            <Shield className="w-16 h-16 mx-auto text-destructive" />
-            <h1 className="text-2xl font-bold text-destructive">Accès bloqué</h1>
-            <p className="text-muted-foreground max-w-md">
-              Votre appareil n'est pas autorisé à accéder au portail. 
-              Contactez un superstaff pour réinitialiser votre HWID.
+      <div className="min-h-screen bg-hero-pro flex items-center justify-center p-4">
+        <Card className="w-full max-w-md glass-panel">
+          <CardContent className="text-center p-8">
+            <img
+              src="/lovable-uploads/edb98f3b-c1fa-4ca1-8a20-dd0be59b3591.png"
+              alt="Logo Flashback Fa"
+              className="mx-auto h-16 w-16 rounded-md shadow mb-6"
+              loading="lazy"
+              decoding="async"
+            />
+            <h1 className="text-2xl font-bold text-gradient mb-4">
+              Portail Flashback Fa
+            </h1>
+            <p className="text-muted-foreground mb-6">
+              Connectez-vous pour accéder à vos données d'entreprise
             </p>
-            <Button onClick={auth.signOut} variant="outline">
-              Retour à la connexion
-            </Button>
-          </div>
-        </div>
-      </>
+            <div className="space-y-3">
+              <Button asChild className="w-full">
+                <Link to="/auth">
+                  <UserIcon className="mr-2 h-4 w-4" />
+                  Connexion Standard
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="w-full">
+                <Link to="/superadmin-auth">
+                  <Shield className="mr-2 h-4 w-4" />
+                  Connexion Superadmin
+                </Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
@@ -152,247 +146,206 @@ const Index = () => {
     <>
       <SEOHead 
         title={pageTitle}
-        description={`Gérez votre entreprise Discord avec le portail Flashback Fa - ${currentEntreprise}`}
+        description={`Gérez vos données d'entreprise Discord avec notre portail complet. Actuellement connecté: ${currentEntreprise}`}
       />
-      <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-40">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
+      
+      <div className="min-h-screen bg-hero-pro">
+        <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
+          <div className="container mx-auto px-4 py-4 flex justify-between items-center">
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-3">
-                <img
-                  src="/lovable-uploads/edb98f3b-c1fa-4ca1-8a20-dd0be59b3591.png"
-                  alt="Logo Flashback Fa - Portail Entreprise"
-                  className="h-8 w-8 rounded-sm"
-                  loading="lazy"
-                  decoding="async"
-                />
-                <h1 className="text-2xl font-bold">Portail Entreprise Flashback Fa</h1>
+              <img
+                src="/lovable-uploads/edb98f3b-c1fa-4ca1-8a20-dd0be59b3591.png"
+                alt="Logo"
+                className="h-8 w-8 rounded"
+                loading="lazy"
+              />
+              <div>
+                <h1 className="text-xl font-bold text-gradient">Flashback Fa</h1>
+                <p className="text-sm text-muted-foreground">{currentEntreprise}</p>
               </div>
-              
             </div>
-
+            
             <div className="flex items-center space-x-4">
-              {/* User info */}
-              <div className="flex items-center space-x-3">
-                <div className="text-right">
-                  <p className="text-sm font-medium">{auth.user?.name}</p>
-                  <div className="flex items-center space-x-2">
-                    <Badge className={getRoleColor(guildRoles.currentRole)}>
-                      {getRoleDisplayName(guildRoles.currentRole)}
-                    </Badge>
-                    {currentEntreprise && currentEntreprise !== 'Aucune Entreprise' && (
-                      <Badge variant="outline" className="text-xs">
-                        {currentEntreprise}
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-                
-                <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                  {auth.user?.avatar ? (
-                    <img 
-                      src={auth.user.avatar} 
-                      alt={auth.user.name} 
-                      className="w-full h-full rounded-full" 
-                    />
-                  ) : (
-                    <UserIcon className="w-5 h-5 text-primary" />
+              <Badge 
+                variant="outline" 
+                className={`${getRoleColor(legacyRole)} border-current`}
+              >
+                {getRoleDisplayName(legacyRole)}
+              </Badge>
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <UserIcon className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>
+                    {auth.profile?.display_name || auth.user?.email}
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/profile">
+                      <SettingsIcon className="mr-2 h-4 w-4" />
+                      Profil
+                    </Link>
+                  </DropdownMenuItem>
+                  {auth.userRole === 'superadmin' && (
+                    <>
+                      <DropdownMenuItem asChild>
+                        <Link to="/superadmin">
+                          <Shield className="mr-2 h-4 w-4" />
+                          Superadmin
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/superadmin-auth">
+                          <Shield className="mr-2 h-4 w-4" />
+                          Auth Legacy
+                        </Link>
+                      </DropdownMenuItem>
+                    </>
                   )}
-                </div>
-                
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" aria-label="Administration" title="Administration">
-                      <Settings className="w-4 h-4 mr-2" /> Admin
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Administration</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <RoleGate allow={(role) => role === 'staff'} currentRole={guildRoles.currentRole}>
-                      <DropdownMenuItem asChild>
-                        <Link to="/superadmin">Espace Superadmin</Link>
-                      </DropdownMenuItem>
-                    </RoleGate>
-                    <RoleGate allow={() => auth.credentials?.is_superstaff === true} currentRole={guildRoles.currentRole}>
-                      <DropdownMenuItem asChild>
-                        <Link to="/hwip-admin">Gestion HWID</Link>
-                      </DropdownMenuItem>
-                    </RoleGate>
-                    <RoleGate allow={canAccessStaffConfig} currentRole={guildRoles.currentRole}>
-                      <DropdownMenuItem onSelect={(e)=>{ e.preventDefault(); setActiveTab('config'); }}>Config Staff</DropdownMenuItem>
-                    </RoleGate>
-                    <RoleGate allow={canAccessCompanyConfig} currentRole={guildRoles.currentRole}>
-                      <DropdownMenuItem asChild>
-                        <Link to={`/patron-config?guild=${guilds.selectedGuildId}`}>Config Patron</Link>
-                      </DropdownMenuItem>
-                    </RoleGate>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={auth.signOut}
-                  aria-label="Déconnexion"
-                  title="Déconnexion"
-                >
-                  <LogOut className="w-4 h-4" />
-                </Button>
-
-
-              </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={auth.signOut}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Déconnexion
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        {!guilds.selectedGuildId ? (
-          <Card className="stat-card max-w-md mx-auto">
-            <CardContent className="p-8 text-center">
-              <Building2 className="w-12 h-12 mx-auto mb-4 text-muted-foreground opacity-50" />
-              <h3 className="text-lg font-semibold mb-2">Sélectionner une guilde</h3>
-              <p className="text-muted-foreground">
-                Veuillez sélectionner une guilde pour accéder au portail.
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3 lg:grid-cols-7">
-              <RoleGate
-                allow={() => true}
-                currentRole={guildRoles.currentRole}
-                asTabTrigger
+        <main className="container mx-auto px-4 py-8">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-7 mb-8">
+              <RoleGate 
+                allow={(role) => true}
+                currentRole={legacyRole}
+                asTabTrigger 
                 value="dashboard"
               >
                 <BarChart3 className="w-4 h-4 mr-2" />
                 Dashboard
               </RoleGate>
               
-              <RoleGate
+              <RoleGate 
                 allow={canAccessDotation}
-                currentRole={guildRoles.currentRole}
-                asTabTrigger
+                currentRole={legacyRole}
+                asTabTrigger 
                 value="dotation"
               >
                 <Calculator className="w-4 h-4 mr-2" />
-                Dotations
+                Dotation
               </RoleGate>
               
-              <RoleGate
+              <RoleGate 
                 allow={canAccessImpot}
-                currentRole={guildRoles.currentRole}
-                asTabTrigger
+                currentRole={legacyRole}
+                asTabTrigger 
                 value="impot"
               >
                 <FileText className="w-4 h-4 mr-2" />
-                Impôts
+                Impôt
               </RoleGate>
               
-              <RoleGate
-                allow={isDot}
-                currentRole={guildRoles.currentRole}
-                asTabTrigger
-                value="docs"
-              >
-                <FileText className="w-4 h-4 mr-2" />
-                Factures/Diplômes
-              </RoleGate>
-              
-              <RoleGate
+              <RoleGate 
                 allow={canAccessBlanchiment}
-                currentRole={guildRoles.currentRole}
-                asTabTrigger
+                currentRole={legacyRole}
+                asTabTrigger 
                 value="blanchiment"
               >
                 <Shield className="w-4 h-4 mr-2" />
                 Blanchiment
               </RoleGate>
               
-              <RoleGate
-                allow={() => true}
-                currentRole={guildRoles.currentRole}
-                asTabTrigger
-                value="archive"
+              <RoleGate 
+                allow={(role) => true}
+                currentRole={legacyRole}
+                asTabTrigger 
+                value="archives"
               >
                 <Archive className="w-4 h-4 mr-2" />
                 Archives
               </RoleGate>
               
+              <RoleGate 
+                allow={canAccessStaffConfig}
+                currentRole={legacyRole}
+                asTabTrigger 
+                value="staff-config"
+              >
+                <Settings className="w-4 h-4 mr-2" />
+                Staff Config
+              </RoleGate>
+              
+              <RoleGate 
+                allow={canAccessCompanyConfig}
+                currentRole={legacyRole}
+                asTabTrigger 
+                value="company-config"
+              >
+                <Building2 className="w-4 h-4 mr-2" />
+                Entreprise
+              </RoleGate>
             </TabsList>
 
             <TabsContent value="dashboard" className="space-y-6">
-              <DashboardSummary 
-                guildId={guilds.selectedGuildId} 
-                currentRole={guildRoles.currentRole} 
-                entreprise={guildRoles.entreprise} 
-              />
+              <DashboardSummary guildId={guilds.selectedGuildId} />
+              <NewDashboard />
             </TabsContent>
 
-            <TabsContent value="dotation" className="space-y-6">
-              <RoleGate allow={canAccessDotation} currentRole={guildRoles.currentRole}>
-                <DotationForm 
-                  guildId={guilds.selectedGuildId} 
-                  entreprise={guildRoles.entreprise}
-                  currentRole={getRoleDisplayName(guildRoles.currentRole)}
-                />
-              </RoleGate>
+            <RoleGate allow={canAccessDotation} currentRole={legacyRole}>
+              <TabsContent value="dotation">
+                <DotationForm guildId={guilds.selectedGuildId} />
+              </TabsContent>
+            </RoleGate>
+
+            <RoleGate allow={canAccessImpot} currentRole={legacyRole}>
+              <TabsContent value="impot">
+                <ImpotForm guildId={guilds.selectedGuildId} />
+              </TabsContent>
+            </RoleGate>
+
+            <RoleGate allow={canAccessBlanchiment} currentRole={legacyRole}>
+              <TabsContent value="blanchiment">
+                <BlanchimentToggle guildId={guilds.selectedGuildId} entrepriseKey={currentEntreprise} />
+              </TabsContent>
+            </RoleGate>
+
+            <TabsContent value="archives" className="space-y-6">
+              <ArchiveTable guildId={guilds.selectedGuildId} />
+              <DocsUpload guildId={guilds.selectedGuildId} role={legacyRole} />
             </TabsContent>
 
-            <TabsContent value="impot" className="space-y-6">
-              <RoleGate allow={canAccessImpot} currentRole={guildRoles.currentRole}>
-                <ImpotForm 
-                  guildId={guilds.selectedGuildId} 
-                  entreprise={guildRoles.entreprise} 
-                  currentRole={guildRoles.currentRole} 
-                />
-              </RoleGate>
-            </TabsContent>
+            <RoleGate allow={canAccessStaffConfig} currentRole={legacyRole}>
+              <TabsContent value="staff-config">
+                <StaffConfig guildId={guilds.selectedGuildId} />
+              </TabsContent>
+            </RoleGate>
 
-            <TabsContent value="blanchiment" className="space-y-6">
-              <RoleGate allow={canAccessBlanchiment} currentRole={guildRoles.currentRole}>
-                <BlanchimentToggle 
-                  guildId={guilds.selectedGuildId}
-                  entrepriseKey={guildRoles.entreprise}
-                />
-              </RoleGate>
-            </TabsContent>
-
-            <TabsContent value="docs" className="space-y-6">
-              <RoleGate allow={isDot} currentRole={guildRoles.currentRole}>
-                <DocsUpload 
-                  guildId={guilds.selectedGuildId} 
-                  entreprise={guildRoles.entreprise} 
-                  role={guildRoles.currentRole} 
-                />
-              </RoleGate>
-            </TabsContent>
-
-            <TabsContent value="archive" className="space-y-6">
-              <ArchiveTable 
-                guildId={guilds.selectedGuildId}
-                currentRole={getRoleDisplayName(guildRoles.currentRole)}
-                entreprise={guildRoles.entreprise}
-              />
-            </TabsContent>
-
-            <TabsContent value="config" className="space-y-6">
-              <RoleGate allow={canAccessStaffConfig} currentRole={guildRoles.currentRole}>
-                <StaffConfig 
-                  guildId={guilds.selectedGuildId} 
-                  currentRole={getRoleDisplayName(guildRoles.currentRole)} 
-                />
-              </RoleGate>
-            </TabsContent>
+            <RoleGate allow={canAccessCompanyConfig} currentRole={legacyRole}>
+              <TabsContent value="company-config">
+                <Card>
+                  <CardContent className="pt-6">
+                    <p className="text-center text-muted-foreground">
+                      Configuration de l'entreprise - À implémenter
+                    </p>
+                    <div className="mt-4 text-center">
+                      <Button asChild>
+                        <Link to="/patron-config">
+                          Accéder aux configurations avancées
+                        </Link>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </RoleGate>
           </Tabs>
-        )}
-      </main>
-    </div>
+        </main>
+      </div>
     </>
   );
 };

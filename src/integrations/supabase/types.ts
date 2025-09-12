@@ -444,7 +444,10 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           discord_id: string | null
+          display_name: string | null
+          email: string | null
           id: string
+          unique_id: string | null
           updated_at: string
           user_id: string
           username: string | null
@@ -453,7 +456,10 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           discord_id?: string | null
+          display_name?: string | null
+          email?: string | null
           id?: string
+          unique_id?: string | null
           updated_at?: string
           user_id: string
           username?: string | null
@@ -462,7 +468,10 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           discord_id?: string | null
+          display_name?: string | null
+          email?: string | null
           id?: string
+          unique_id?: string | null
           updated_at?: string
           user_id?: string
           username?: string | null
@@ -495,6 +504,30 @@ export type Database = {
           ip_address?: unknown | null
           operation?: string
           user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          assigned_at: string
+          assigned_by: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
         }
         Relationships: []
@@ -539,6 +572,10 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_user_highest_role: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
       get_user_security_info: {
         Args: { target_user_id?: string }
         Returns: {
@@ -550,6 +587,13 @@ export type Database = {
           unique_id: string
           user_id: string
         }[]
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
       }
       list_users_safe: {
         Args: Record<PropertyKey, never>
@@ -587,7 +631,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "user" | "admin" | "superadmin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -714,6 +758,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["user", "admin", "superadmin"],
+    },
   },
 } as const

@@ -8,6 +8,7 @@ import NotFound from "./pages/NotFound";
 import SuperadminPage from "./pages/Superadmin";
 import CompanyConfigPage from "./pages/CompanyConfig";
 import SuperadminAuthPage from "./pages/SuperadminAuth";
+import AuthPage from "./pages/Auth";
 
 const queryClient = new QueryClient();
 
@@ -19,6 +20,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/auth" element={<AuthPage />} />
           <Route path="/superadmin" element={<SuperadminPage />} />
           <Route path="/patron-config" element={<CompanyConfigPage />} />
           <Route path="/superadmin-auth" element={<SuperadminAuthPage />} />
