@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { Shield, User, Mail, Key, Hash, AlertCircle, Loader2, UserCheck, UserPlus, RotateCcw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { extractEdgeError } from "@/lib/edgeError";
 
 interface SuperadminAuthProps {
   onAuthSuccess: () => void;
@@ -41,61 +42,6 @@ export function SuperadminAuth({ onAuthSuccess }: SuperadminAuthProps) {
     targetEmail: ''
   });
 
-  // Helpers pour extraire des messages précis depuis les erreurs d'Edge Functions
-  const typeToMessage = (type?: string) => {
-    switch (type) {
-      case 'EMAIL_ALREADY_EXISTS':
-        return 'Cet email est déjà enregistré. Essayez de vous connecter à la place.';
-      case 'UNIQUE_ID_ALREADY_EXISTS':
-        return 'Cet ID unique est déjà utilisé. Veuillez en choisir un autre.';
-      case 'DISCORD_ID_ALREADY_EXISTS':
-        return 'Cet ID Discord est déjà utilisé.';
-      case 'INVALID_ACCESS_CODE':
-        return 'Code d\'accès invalide. Contactez un superadmin.';
-      case 'INVALID_CODE':
-        return 'Code invalide ou expiré';
-      case 'INVALID_PASSWORD':
-        return 'Mot de passe incorrect';
-      case 'USER_NOT_FOUND':
-        return 'Utilisateur non trouvé';
-      case 'EMAIL_NOT_FOUND':
-        return 'Email non trouvé';
-      case 'NOT_SUPERADMIN':
-        return 'Accès réservé aux superadmins';
-      default:
-        return null;
-    }
-  };
-
-  const extractEdgeError = async (e: any) => {
-    let message = e?.message || 'Erreur inattendue';
-    let type: string | undefined;
-
-    // 1) Essayer un body déjà présent
-    const body = e?.context?.body;
-    try {
-      const parsed = typeof body === 'string' ? JSON.parse(body) : body;
-      if (parsed) {
-        type = parsed?.type ?? type;
-        if (parsed?.error) message = parsed.error;
-      }
-    } catch {}
-
-    // 2) Essayer de lire la Response
-    if (!type && e?.context?.response) {
-      try {
-        const resp = e.context.response;
-        const text = await resp.clone().text();
-        const parsed = JSON.parse(text);
-        type = parsed?.type ?? type;
-        if (parsed?.error) message = parsed.error;
-      } catch {}
-    }
-
-    return { message: typeToMessage(type) || message, type } as const;
-  };
-
-  const handleSendCode = async () => {
     setIsLoading(true);
     setError(null);
     
