@@ -293,6 +293,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "hwid_audit_auth_credential_id_fkey"
+            columns: ["auth_credential_id"]
+            isOneToOne: false
+            referencedRelation: "auth_credentials_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "hwip_audit_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: false
@@ -474,7 +481,48 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      auth_credentials_safe: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          has_hwid_registered: boolean | null
+          hwid_reset_count: number | null
+          id: string | null
+          is_superstaff: boolean | null
+          last_hwid_reset: string | null
+          registration_date: string | null
+          unique_id: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          has_hwid_registered?: never
+          hwid_reset_count?: number | null
+          id?: string | null
+          is_superstaff?: boolean | null
+          last_hwid_reset?: string | null
+          registration_date?: string | null
+          unique_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          has_hwid_registered?: never
+          hwid_reset_count?: number | null
+          id?: string | null
+          is_superstaff?: boolean | null
+          last_hwid_reset?: string | null
+          registration_date?: string | null
+          unique_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       check_hwid_access_secure: {
@@ -484,6 +532,20 @@ export type Database = {
       check_hwip_access: {
         Args: { target_hwip: string; target_profile_id: string }
         Returns: Json
+      }
+      get_safe_user_credentials: {
+        Args: { target_user_id?: string }
+        Returns: {
+          email: string
+          has_hwid_registered: boolean
+          hwid_reset_count: number
+          id: string
+          is_superstaff: boolean
+          last_hwid_reset: string
+          registration_date: string
+          unique_id: string
+          user_id: string
+        }[]
       }
       get_user_security_info: {
         Args: { target_user_id?: string }
@@ -508,6 +570,10 @@ export type Database = {
       user_can_access_enterprise: {
         Args: { target_enterprise_id: string }
         Returns: boolean
+      }
+      verify_user_hwid_secure: {
+        Args: { target_hwid: string }
+        Returns: Json
       }
     }
     Enums: {
