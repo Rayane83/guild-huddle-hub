@@ -45,8 +45,8 @@ export function useCustomAuth() {
 
         // Vérifier le HWID si disponible
         const currentHwid = await getCurrentHwid();
-        const { data: hwidCheck } = await supabase.rpc('check_hwip_access', {
-          target_hwip: currentHwid,
+        const { data: hwidCheck } = await supabase.rpc('check_hwid_access', {
+          target_hwid: currentHwid,
           target_profile_id: profile.id
         });
 
@@ -184,7 +184,7 @@ export function useCustomAuth() {
 
   const resetHwid = useCallback(async (profileId: string) => {
     try {
-      const { data, error } = await supabase.rpc('reset_hwip', {
+      const { data, error } = await supabase.rpc('reset_hwid', {
         target_profile_id: profileId
       });
 

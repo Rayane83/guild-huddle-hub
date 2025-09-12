@@ -205,11 +205,11 @@ export type Database = {
         }
         Relationships: []
       }
-      hwip_audit: {
+      hwid_audit: {
         Row: {
           attempted_at: string | null
           created_at: string | null
-          hwip: string
+          hwid: string
           id: string
           profile_id: string | null
           reason: string | null
@@ -219,7 +219,7 @@ export type Database = {
         Insert: {
           attempted_at?: string | null
           created_at?: string | null
-          hwip: string
+          hwid: string
           id?: string
           profile_id?: string | null
           reason?: string | null
@@ -229,7 +229,7 @@ export type Database = {
         Update: {
           attempted_at?: string | null
           created_at?: string | null
-          hwip?: string
+          hwid?: string
           id?: string
           profile_id?: string | null
           reason?: string | null
@@ -363,11 +363,11 @@ export type Database = {
           created_at: string
           discord_id: string | null
           email: string | null
-          hwip: string | null
-          hwip_reset_count: number | null
+          hwid: string | null
+          hwid_reset_count: number | null
           id: string
           is_superstaff: boolean | null
-          last_hwip_reset: string | null
+          last_hwid_reset: string | null
           password_hash: string | null
           registration_date: string | null
           unique_id: string | null
@@ -380,11 +380,11 @@ export type Database = {
           created_at?: string
           discord_id?: string | null
           email?: string | null
-          hwip?: string | null
-          hwip_reset_count?: number | null
+          hwid?: string | null
+          hwid_reset_count?: number | null
           id?: string
           is_superstaff?: boolean | null
-          last_hwip_reset?: string | null
+          last_hwid_reset?: string | null
           password_hash?: string | null
           registration_date?: string | null
           unique_id?: string | null
@@ -397,11 +397,11 @@ export type Database = {
           created_at?: string
           discord_id?: string | null
           email?: string | null
-          hwip?: string | null
-          hwip_reset_count?: number | null
+          hwid?: string | null
+          hwid_reset_count?: number | null
           id?: string
           is_superstaff?: boolean | null
-          last_hwip_reset?: string | null
+          last_hwid_reset?: string | null
           password_hash?: string | null
           registration_date?: string | null
           unique_id?: string | null
@@ -446,8 +446,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_hwid_access: {
+        Args: { target_hwid: string; target_profile_id: string }
+        Returns: Json
+      }
       check_hwip_access: {
         Args: { target_hwip: string; target_profile_id: string }
+        Returns: Json
+      }
+      reset_hwid: {
+        Args: { target_profile_id: string }
         Returns: Json
       }
       reset_hwip: {

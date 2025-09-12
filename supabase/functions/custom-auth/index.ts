@@ -126,7 +126,7 @@ async function handleRegister(supabase: any, userData: {
         discord_id: discordId,
         email: email,
         password_hash: passwordHash,
-        hwip: hwid,
+        hwid: hwid,
         username: uniqueId,
         registration_date: new Date().toISOString()
       });
@@ -194,16 +194,16 @@ async function handleLogin(supabase: any, loginData: {
     }
 
     // Vérifier le HWID
-    const { data: hwidCheck } = await supabase.rpc('check_hwip_access', {
-      target_hwip: hwid,
+    const { data: hwidCheck } = await supabase.rpc('check_hwid_access', {
+      target_hwid: hwid,
       target_profile_id: profile.id
     });
 
     if (!hwidCheck.allowed) {
       // Logger la tentative
-      await supabase.from('hwip_audit').insert({
+      await supabase.from('hwid_audit').insert({
         profile_id: profile.id,
-        hwip: hwid,
+        hwid: hwid,
         success: false,
         reason: hwidCheck.reason,
         user_agent: 'Custom Auth'
@@ -220,9 +220,9 @@ async function handleLogin(supabase: any, loginData: {
     }
 
     // Logger la connexion réussie
-    await supabase.from('hwip_audit').insert({
+    await supabase.from('hwid_audit').insert({
       profile_id: profile.id,
-      hwip: hwid,
+      hwid: hwid,
       success: true,
       reason: 'login_success',
       user_agent: 'Custom Auth'

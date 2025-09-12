@@ -16,16 +16,16 @@ interface Profile {
   unique_id: string;
   discord_id: string;
   email: string;
-  hwip: string | null;
-  hwip_reset_count: number;
-  last_hwip_reset: string | null;
+  hwid: string | null;
+  hwid_reset_count: number;
+  last_hwid_reset: string | null;
   registration_date: string;
   is_superstaff: boolean;
 }
 
-interface HwipAuditLog {
+interface HwidAuditLog {
   id: string;
-  hwip: string;
+  hwid: string;
   attempted_at: string;
   success: boolean;
   reason: string;
@@ -38,7 +38,7 @@ export function HwipManager() {
   const { toast } = useToast();
   const { profile } = useCustomAuth();
   const [profiles, setProfiles] = useState<Profile[]>([]);
-  const [auditLogs, setAuditLogs] = useState<HwipAuditLog[]>([]);
+  const [auditLogs, setAuditLogs] = useState<HwidAuditLog[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -56,7 +56,7 @@ export function HwipManager() {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, unique_id, discord_id, email, hwip, hwip_reset_count, last_hwip_reset, registration_date, is_superstaff')
+        .select('id, unique_id, discord_id, email, hwid, hwid_reset_count, last_hwid_reset, registration_date, is_superstaff')
         .order('registration_date', { ascending: false });
 
       if (error) {
@@ -76,24 +76,46 @@ export function HwipManager() {
 
   const loadAuditLogs = async () => {
     try {
-      const { data, error } = await supabase
-        .from('hwip_audit')
-        .select(`
-          id,
-          hwip,
-          attempted_at,
-          success,
-          reason,
-          profile:profiles!hwip_audit_profile_id_fkey(unique_id)
-        `)
+      const { data: auditData, error: auditError } = await supabase
+        .from('hwid_audit')
+        .select('id, hwid, attempted_at, success, reason, profile_id')
         .order('attempted_at', { ascending: false })
         .limit(50);
 
-      if (error) {
-        throw error;
+      if (auditError) {
+        throw auditError;
       }
 
-      setAuditLogs(data || []);
+      // Récupérer les profils pour les logs
+      const profileIds = [...new Set(auditData?.map(log => log.profile_id) || [])];
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, unique_id')
+        .in('id', profileIds);
+
+      if (profilesError) {
+        throw profilesError;
+      }
+
+      // Créer un map des profils pour un accès rapide
+      const profilesMap = (profilesData || []).reduce((acc, profile) => {
+        acc[profile.id] = profile;
+        return acc;
+      }, {} as Record<string, { id: string; unique_id: string }>);
+
+      // Transformer les données pour correspondre à l'interface
+      const transformedLogs = (auditData || []).map(log => ({
+        id: log.id,
+        hwid: log.hwid,
+        attempted_at: log.attempted_at,
+        success: log.success,
+        reason: log.reason,
+        profile: {
+          unique_id: profilesMap[log.profile_id]?.unique_id || 'Inconnu'
+        }
+      }));
+
+      setAuditLogs(transformedLogs);
     } catch (error) {
       console.error('Error loading audit logs:', error);
       toast({
@@ -111,7 +133,7 @@ export function HwipManager() {
 
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.rpc('reset_hwip', {
+      const { data, error } = await supabase.rpc('reset_hwid', {
         target_profile_id: profileId
       });
 
@@ -228,7 +250,7 @@ export function HwipManager() {
               <Shield className="w-5 h-5 text-green-500" />
               <div>
                 <p className="text-sm text-muted-foreground">HWID Enregistrés</p>
-                <p className="text-2xl font-bold">{profiles.filter(p => p.hwip).length}</p>
+                <p className="text-2xl font-bold">{profiles.filter(p => p.hwid).length}</p>
               </div>
             </div>
           </CardContent>
@@ -241,7 +263,7 @@ export function HwipManager() {
               <div>
                 <p className="text-sm text-muted-foreground">Réinitialisations</p>
                 <p className="text-2xl font-bold">
-                  {profiles.reduce((acc, p) => acc + (p.hwip_reset_count || 0), 0)}
+                  {profiles.reduce((acc, p) => acc + (p.hwid_reset_count || 0), 0)}
                 </p>
               </div>
             </div>
@@ -312,10 +334,10 @@ export function HwipManager() {
                     </TableCell>
                     <TableCell>{profile.email}</TableCell>
                     <TableCell>
-                      {profile.hwip ? (
+                      {profile.hwid ? (
                         <div className="flex items-center gap-2">
                           <Badge variant="outline" className="font-mono text-xs">
-                            {profile.hwip.substring(0, 8)}...
+                            {profile.hwid.substring(0, 8)}...
                           </Badge>
                           <CheckCircle className="w-4 h-4 text-green-500" />
                         </div>
@@ -324,10 +346,10 @@ export function HwipManager() {
                       )}
                     </TableCell>
                     <TableCell>
-                      {profile.hwip_reset_count || 0}
-                      {profile.last_hwip_reset && (
+                      {profile.hwid_reset_count || 0}
+                      {profile.last_hwid_reset && (
                         <div className="text-xs text-muted-foreground">
-                          {new Date(profile.last_hwip_reset).toLocaleDateString('fr-FR')}
+                          {new Date(profile.last_hwid_reset).toLocaleDateString('fr-FR')}
                         </div>
                       )}
                     </TableCell>
@@ -343,7 +365,7 @@ export function HwipManager() {
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
-                        {profile.hwip && (
+                        {profile.hwid && (
                           <Button
                             size="sm"
                             variant="outline"
@@ -400,7 +422,7 @@ export function HwipManager() {
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline" className="font-mono text-xs">
-                        {log.hwip.substring(0, 8)}...
+                        {log.hwid.substring(0, 8)}...
                       </Badge>
                     </TableCell>
                     <TableCell>
