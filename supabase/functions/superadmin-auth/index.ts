@@ -35,24 +35,37 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { action, ...data } = await req.json();
+    const body = await req.json();
+    console.log('Request body received:', JSON.stringify(body, null, 2));
+    
+    const { action, ...data } = body;
+    console.log('Action:', action, 'Data keys:', Object.keys(data));
 
     switch (action) {
       case 'send_login_code':
+        console.log('Handling send_login_code');
         return await handleSendLoginCode(data);
       case 'verify_login_code':
+        console.log('Handling verify_login_code');
         return await handleVerifyLoginCode(data);
       case 'register_with_code':
+        console.log('Handling register_with_code');
         return await handleRegisterWithCode(data);
       case 'reset_user_password':
+        console.log('Handling reset_user_password');
         return await handleResetUserPassword(data);
       default:
-        throw new Error('Action non reconnue');
+        console.error('Unknown action:', action);
+        throw new Error('Action non reconnue: ' + action);
     }
   } catch (error: any) {
     console.error('Erreur dans superadmin-auth:', error);
+    console.error('Error stack:', error.stack);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: error.stack ? error.stack.split('\n').slice(0, 5).join('\n') : 'No stack trace'
+      }),
       {
         status: 400,
         headers: { "Content-Type": "application/json", ...corsHeaders },
