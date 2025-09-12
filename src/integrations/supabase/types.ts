@@ -501,13 +501,7 @@ export type Database = {
       }
     }
     Views: {
-      auth_credentials_safe: {
-        Row: {
-          instruction: string | null
-          message: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       check_hwid_access_secure: {
