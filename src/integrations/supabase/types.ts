@@ -53,6 +53,51 @@ export type Database = {
         }
         Relationships: []
       }
+      auth_credentials: {
+        Row: {
+          created_at: string | null
+          email: string
+          hwid: string | null
+          hwid_reset_count: number | null
+          id: string
+          is_superstaff: boolean | null
+          last_hwid_reset: string | null
+          password_hash: string
+          registration_date: string | null
+          unique_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          hwid?: string | null
+          hwid_reset_count?: number | null
+          id?: string
+          is_superstaff?: boolean | null
+          last_hwid_reset?: string | null
+          password_hash: string
+          registration_date?: string | null
+          unique_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          hwid?: string | null
+          hwid_reset_count?: number | null
+          id?: string
+          is_superstaff?: boolean | null
+          last_hwid_reset?: string | null
+          password_hash?: string
+          registration_date?: string | null
+          unique_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       discord_config: {
         Row: {
           client_id: string | null
@@ -208,6 +253,7 @@ export type Database = {
       hwid_audit: {
         Row: {
           attempted_at: string | null
+          auth_credential_id: string | null
           created_at: string | null
           hwid: string
           id: string
@@ -218,6 +264,7 @@ export type Database = {
         }
         Insert: {
           attempted_at?: string | null
+          auth_credential_id?: string | null
           created_at?: string | null
           hwid: string
           id?: string
@@ -228,6 +275,7 @@ export type Database = {
         }
         Update: {
           attempted_at?: string | null
+          auth_credential_id?: string | null
           created_at?: string | null
           hwid?: string
           id?: string
@@ -237,6 +285,13 @@ export type Database = {
           user_agent?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "hwid_audit_auth_credential_id_fkey"
+            columns: ["auth_credential_id"]
+            isOneToOne: false
+            referencedRelation: "auth_credentials"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "hwip_audit_profile_id_fkey"
             columns: ["profile_id"]
@@ -450,12 +505,20 @@ export type Database = {
         Args: { target_hwid: string; target_profile_id: string }
         Returns: Json
       }
+      check_hwid_access_secure: {
+        Args: { target_hwid: string; target_user_id: string }
+        Returns: Json
+      }
       check_hwip_access: {
         Args: { target_hwip: string; target_profile_id: string }
         Returns: Json
       }
       reset_hwid: {
         Args: { target_profile_id: string }
+        Returns: Json
+      }
+      reset_hwid_secure: {
+        Args: { target_user_id: string }
         Returns: Json
       }
       reset_hwip: {

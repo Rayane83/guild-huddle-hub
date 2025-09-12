@@ -9,12 +9,12 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Shield, Search, RotateCcw, AlertTriangle, CheckCircle, Users, Activity } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useCustomAuth } from "@/hooks/useCustomAuth";
+import { useSecureAuth } from "@/hooks/useSecureAuth";
 
-interface Profile {
+interface AuthCredentials {
   id: string;
+  user_id: string;
   unique_id: string;
-  discord_id: string;
   email: string;
   hwid: string | null;
   hwid_reset_count: number;
@@ -29,44 +29,45 @@ interface HwidAuditLog {
   attempted_at: string;
   success: boolean;
   reason: string;
-  profile_id: string;
+  auth_credential_id: string;
 }
 
-export function HwidManager() {
+export function SecureHwidManager() {
   const { toast } = useToast();
-  const { profile } = useCustomAuth();
-  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const { credentials } = useSecureAuth();
+  const [authCredentials, setAuthCredentials] = useState<AuthCredentials[]>([]);
   const [auditLogs, setAuditLogs] = useState<HwidAuditLog[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   // Vérifier si l'utilisateur est superstaff
-  const isSuperstaff = profile?.is_superstaff === true;
+  const isSuperstaff = credentials?.is_superstaff === true;
 
   useEffect(() => {
     if (isSuperstaff) {
-      loadProfiles();
+      loadAuthCredentials();
       loadAuditLogs();
     }
   }, [isSuperstaff]);
 
-  const loadProfiles = async () => {
+  const loadAuthCredentials = async () => {
     try {
+      // Les superstaff peuvent voir toutes les credentials grâce aux politiques RLS
       const { data, error } = await supabase
-        .from('profiles')
-        .select('id, unique_id, discord_id, email, hwid, hwid_reset_count, last_hwid_reset, registration_date, is_superstaff')
+        .from('auth_credentials')
+        .select('id, user_id, unique_id, email, hwid, hwid_reset_count, last_hwid_reset, registration_date, is_superstaff')
         .order('registration_date', { ascending: false });
 
       if (error) {
         throw error;
       }
 
-      setProfiles(data || []);
+      setAuthCredentials(data || []);
     } catch (error) {
-      console.error('Error loading profiles:', error);
+      console.error('Error loading auth credentials:', error);
       toast({
         title: "Erreur",
-        description: "Impossible de charger les profils",
+        description: "Impossible de charger les données d'authentification",
         variant: "destructive",
       });
     }
@@ -76,7 +77,7 @@ export function HwidManager() {
     try {
       const { data, error } = await supabase
         .from('hwid_audit')
-        .select('id, hwid, attempted_at, success, reason, profile_id')
+        .select('id, hwid, attempted_at, success, reason, auth_credential_id')
         .order('attempted_at', { ascending: false })
         .limit(50);
 
@@ -95,15 +96,15 @@ export function HwidManager() {
     }
   };
 
-  const resetHwid = async (profileId: string, uniqueId: string) => {
+  const resetHwid = async (userId: string, uniqueId: string) => {
     if (!confirm(`Êtes-vous sûr de vouloir réinitialiser le HWID de ${uniqueId} ?`)) {
       return;
     }
 
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.rpc('reset_hwid', {
-        target_profile_id: profileId
+      const { data, error } = await supabase.rpc('reset_hwid_secure', {
+        target_user_id: userId
       });
 
       if (error) {
@@ -115,7 +116,7 @@ export function HwidManager() {
           title: "HWID réinitialisé",
           description: `Le HWID de ${uniqueId} a été réinitialisé avec succès`,
         });
-        loadProfiles();
+        loadAuthCredentials();
         loadAuditLogs();
       } else {
         const reason = data && typeof data === 'object' && 'reason' in data ? data.reason : 'Erreur lors de la réinitialisation';
@@ -133,7 +134,7 @@ export function HwidManager() {
     }
   };
 
-  const toggleSuperstaff = async (profileId: string, uniqueId: string, currentStatus: boolean) => {
+  const toggleSuperstaff = async (userId: string, uniqueId: string, currentStatus: boolean) => {
     const action = currentStatus ? 'retirer les droits superstaff à' : 'donner les droits superstaff à';
     
     if (!confirm(`Êtes-vous sûr de vouloir ${action} ${uniqueId} ?`)) {
@@ -143,9 +144,9 @@ export function HwidManager() {
     setIsLoading(true);
     try {
       const { error } = await supabase
-        .from('profiles')
+        .from('auth_credentials')
         .update({ is_superstaff: !currentStatus })
-        .eq('id', profileId);
+        .eq('user_id', userId);
 
       if (error) {
         throw error;
@@ -155,7 +156,7 @@ export function HwidManager() {
         title: "Droits modifiés",
         description: `Les droits de ${uniqueId} ont été modifiés`,
       });
-      loadProfiles();
+      loadAuthCredentials();
     } catch (error) {
       console.error('Error toggling superstaff:', error);
       toast({
@@ -168,10 +169,9 @@ export function HwidManager() {
     }
   };
 
-  const filteredProfiles = profiles.filter(p =>
-    p.unique_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.discord_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.email.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredCredentials = authCredentials.filter(c =>
+    c.unique_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    c.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (!isSuperstaff) {
@@ -194,10 +194,18 @@ export function HwidManager() {
       <div className="flex items-center gap-3">
         <Shield className="w-8 h-8 text-primary" />
         <div>
-          <h1 className="text-2xl font-bold">Gestion des HWID</h1>
-          <p className="text-muted-foreground">Administration des restrictions d'appareils</p>
+          <h1 className="text-2xl font-bold">Gestion Sécurisée des HWID</h1>
+          <p className="text-muted-foreground">Administration des restrictions d'appareils (Architecture sécurisée)</p>
         </div>
       </div>
+
+      {/* Security Notice */}
+      <Alert>
+        <Shield className="h-4 w-4" />
+        <AlertDescription>
+          <strong>Architecture sécurisée active :</strong> Les données d'authentification sont maintenant séparées des données de profil pour une sécurité renforcée.
+        </AlertDescription>
+      </Alert>
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -207,7 +215,7 @@ export function HwidManager() {
               <Users className="w-5 h-5 text-blue-500" />
               <div>
                 <p className="text-sm text-muted-foreground">Total Utilisateurs</p>
-                <p className="text-2xl font-bold">{profiles.length}</p>
+                <p className="text-2xl font-bold">{authCredentials.length}</p>
               </div>
             </div>
           </CardContent>
@@ -219,7 +227,7 @@ export function HwidManager() {
               <Shield className="w-5 h-5 text-green-500" />
               <div>
                 <p className="text-sm text-muted-foreground">HWID Enregistrés</p>
-                <p className="text-2xl font-bold">{profiles.filter(p => p.hwid).length}</p>
+                <p className="text-2xl font-bold">{authCredentials.filter(c => c.hwid).length}</p>
               </div>
             </div>
           </CardContent>
@@ -232,7 +240,7 @@ export function HwidManager() {
               <div>
                 <p className="text-sm text-muted-foreground">Réinitialisations</p>
                 <p className="text-2xl font-bold">
-                  {profiles.reduce((acc, p) => acc + (p.hwid_reset_count || 0), 0)}
+                  {authCredentials.reduce((acc, c) => acc + (c.hwid_reset_count || 0), 0)}
                 </p>
               </div>
             </div>
@@ -245,7 +253,7 @@ export function HwidManager() {
               <Activity className="w-5 h-5 text-purple-500" />
               <div>
                 <p className="text-sm text-muted-foreground">Superstaff</p>
-                <p className="text-2xl font-bold">{profiles.filter(p => p.is_superstaff).length}</p>
+                <p className="text-2xl font-bold">{authCredentials.filter(c => c.is_superstaff).length}</p>
               </div>
             </div>
           </CardContent>
@@ -259,7 +267,7 @@ export function HwidManager() {
             <Users className="w-5 h-5" />
             Gestion des Utilisateurs
           </CardTitle>
-          <CardDescription>Rechercher et gérer les utilisateurs et leurs HWID</CardDescription>
+          <CardDescription>Rechercher et gérer les utilisateurs et leurs HWID (données sécurisées)</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-4 mb-6">
@@ -269,7 +277,7 @@ export function HwidManager() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="search"
-                  placeholder="ID unique, ID Discord ou email..."
+                  placeholder="ID unique ou email..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -291,22 +299,24 @@ export function HwidManager() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredProfiles.map((profile) => (
-                  <TableRow key={profile.id}>
+                {filteredCredentials.map((credential) => (
+                  <TableRow key={credential.id}>
                     <TableCell>
                       <div className="space-y-1">
-                        <div className="font-medium">{profile.unique_id}</div>
-                        <div className="text-sm text-muted-foreground">
-                          Discord: {profile.discord_id}
+                        <div className="font-medium">{credential.unique_id}</div>
+                        <div className="text-xs text-muted-foreground">
+                          ID: {credential.user_id.substring(0, 8)}...
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>{profile.email}</TableCell>
                     <TableCell>
-                      {profile.hwid ? (
+                      <div className="font-mono text-sm">{credential.email}</div>
+                    </TableCell>
+                    <TableCell>
+                      {credential.hwid ? (
                         <div className="flex items-center gap-2">
                           <Badge variant="outline" className="font-mono text-xs">
-                            {profile.hwid.substring(0, 8)}...
+                            {credential.hwid.substring(0, 8)}...
                           </Badge>
                           <CheckCircle className="w-4 h-4 text-green-500" />
                         </div>
@@ -315,30 +325,32 @@ export function HwidManager() {
                       )}
                     </TableCell>
                     <TableCell>
-                      {profile.hwid_reset_count || 0}
-                      {profile.last_hwid_reset && (
-                        <div className="text-xs text-muted-foreground">
-                          {new Date(profile.last_hwid_reset).toLocaleDateString('fr-FR')}
-                        </div>
-                      )}
+                      <div>
+                        <div className="font-medium">{credential.hwid_reset_count || 0}</div>
+                        {credential.last_hwid_reset && (
+                          <div className="text-xs text-muted-foreground">
+                            {new Date(credential.last_hwid_reset).toLocaleDateString('fr-FR')}
+                          </div>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell>
                       <div className="space-y-1">
-                        {profile.is_superstaff && (
+                        {credential.is_superstaff && (
                           <Badge variant="default">Superstaff</Badge>
                         )}
                         <div className="text-xs text-muted-foreground">
-                          Inscrit: {new Date(profile.registration_date).toLocaleDateString('fr-FR')}
+                          Inscrit: {new Date(credential.registration_date).toLocaleDateString('fr-FR')}
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
-                        {profile.hwid && (
+                        {credential.hwid && (
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => resetHwid(profile.id, profile.unique_id)}
+                            onClick={() => resetHwid(credential.user_id, credential.unique_id)}
                             disabled={isLoading}
                           >
                             <RotateCcw className="w-4 h-4" />
@@ -346,11 +358,11 @@ export function HwidManager() {
                         )}
                         <Button
                           size="sm"
-                          variant={profile.is_superstaff ? "destructive" : "secondary"}
-                          onClick={() => toggleSuperstaff(profile.id, profile.unique_id, profile.is_superstaff)}
+                          variant={credential.is_superstaff ? "destructive" : "secondary"}
+                          onClick={() => toggleSuperstaff(credential.user_id, credential.unique_id, credential.is_superstaff)}
                           disabled={isLoading}
                         >
-                          {profile.is_superstaff ? "Révoquer" : "Promouvoir"}
+                          {credential.is_superstaff ? "Révoquer" : "Promouvoir"}
                         </Button>
                       </div>
                     </TableCell>
@@ -367,7 +379,7 @@ export function HwidManager() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Activity className="w-5 h-5" />
-            Logs d'Audit HWID
+            Logs d'Audit HWID Sécurisés
           </CardTitle>
           <CardDescription>Historique des tentatives de connexion et modifications HWID</CardDescription>
         </CardHeader>
@@ -384,31 +396,34 @@ export function HwidManager() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {auditLogs.map((log) => (
-                  <TableRow key={log.id}>
-                    <TableCell className="font-medium">
-                      {profiles.find(p => p.id === log.profile_id)?.unique_id || 'Inconnu'}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="font-mono text-xs">
-                        {log.hwid.substring(0, 8)}...
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {new Date(log.attempted_at).toLocaleString('fr-FR')}
-                    </TableCell>
-                    <TableCell>
-                      {log.success ? (
-                        <Badge className="bg-green-500">Succès</Badge>
-                      ) : (
-                        <Badge variant="destructive">Échec</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <span className="text-sm text-muted-foreground">{log.reason}</span>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {auditLogs.map((log) => {
+                  const credential = authCredentials.find(c => c.id === log.auth_credential_id);
+                  return (
+                    <TableRow key={log.id}>
+                      <TableCell className="font-medium">
+                        {credential?.unique_id || 'Inconnu'}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="font-mono text-xs">
+                          {log.hwid.substring(0, 8)}...
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {new Date(log.attempted_at).toLocaleString('fr-FR')}
+                      </TableCell>
+                      <TableCell>
+                        {log.success ? (
+                          <Badge className="bg-green-500">Succès</Badge>
+                        ) : (
+                          <Badge variant="destructive">Échec</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm text-muted-foreground">{log.reason}</span>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </div>

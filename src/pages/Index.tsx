@@ -18,7 +18,7 @@ import { DocsUpload } from '@/components/DocsUpload';
 import { StaffConfig } from '@/components/StaffConfig';
 
 // Hooks
-import { useCustomAuth } from '@/hooks/useCustomAuth';
+import { useSecureAuth } from '@/hooks/useSecureAuth';
 import { useGuilds, useGuildRoles } from '@/hooks';
 import { useConfigSync } from '@/hooks/useConfigSync';
 
@@ -53,7 +53,7 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 
 const Index = () => {
   // Custom hooks for clean state management
-  const auth = useCustomAuth();
+  const auth = useSecureAuth();
   const guilds = useGuilds();
   const guildRoles = useGuildRoles(guilds.selectedGuildId);
   
@@ -200,7 +200,7 @@ const Index = () => {
                         <Link to="/superadmin">Espace Superadmin</Link>
                       </DropdownMenuItem>
                     </RoleGate>
-                    <RoleGate allow={() => auth.profile?.is_superstaff === true} currentRole={guildRoles.currentRole}>
+                    <RoleGate allow={() => auth.credentials?.is_superstaff === true} currentRole={guildRoles.currentRole}>
                       <DropdownMenuItem asChild>
                         <Link to="/hwip-admin">Gestion HWID</Link>
                       </DropdownMenuItem>

@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Shield, User, Mail, Key, Hash, AlertCircle, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useSecureAuth } from "@/hooks/useSecureAuth";
 
 interface AuthScreenProps {
   onAuthSuccess: () => void;
@@ -37,8 +38,7 @@ export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
     
     try {
       // Utiliser l'API Supabase au lieu de fetch direct
-      const { useCustomAuth } = await import('@/hooks/useCustomAuth');
-      const auth = useCustomAuth();
+      const auth = useSecureAuth();
       
       await auth.signIn(loginForm.identifier, loginForm.password);
       
@@ -75,8 +75,7 @@ export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
     
     try {
       // Utiliser l'API Supabase au lieu de fetch direct
-      const { useCustomAuth } = await import('@/hooks/useCustomAuth');
-      const auth = useCustomAuth();
+      const auth = useSecureAuth();
       
       await auth.signUp({
         uniqueId: registerForm.uniqueId,
