@@ -46,45 +46,6 @@ export default function SuperadminPage() {
   const location = useLocation();
   const { toast } = useToast();
 
-  // Vérification d'authentification AVANT tout le reste
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className="max-w-md">
-          <CardContent className="p-8 text-center">
-            <AlertTriangle className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-lg font-semibold mb-2">Connexion requise</h3>
-            <p className="text-muted-foreground">
-              Vous devez être connecté pour accéder à cette page.
-            </p>
-            <Button className="mt-4" onClick={() => navigate('/auth')}>
-              Se connecter
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  // Vérification du rôle superadmin
-  if (userRole !== 'superadmin') {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className="max-w-md">
-          <CardContent className="p-8 text-center">
-            <AlertTriangle className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-lg font-semibold mb-2">Accès interdit</h3>
-            <p className="text-muted-foreground">
-              Cette page est réservée aux superadmins.
-            </p>
-            <Button className="mt-4" onClick={() => navigate('/')}>
-              Retour à l'accueil
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const canManageSuperadmins = currentUserId === ROOT_SUPERADMIN_ID;
@@ -348,6 +309,45 @@ export default function SuperadminPage() {
     }, 800);
     return () => clearTimeout(t);
   }, [cfg.principalGuildId, cfg.enterprises]);
+
+  // Guards moved here to keep hooks order stable
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="max-w-md">
+          <CardContent className="p-8 text-center">
+            <AlertTriangle className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+            <h3 className="text-lg font-semibold mb-2">Connexion requise</h3>
+            <p className="text-muted-foreground">
+              Vous devez être connecté pour accéder à cette page.
+            </p>
+            <Button className="mt-4" onClick={() => navigate('/auth')}>
+              Se connecter
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (userRole !== 'superadmin') {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="max-w-md">
+          <CardContent className="p-8 text-center">
+            <AlertTriangle className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+            <h3 className="text-lg font-semibold mb-2">Accès interdit</h3>
+            <p className="text-muted-foreground">
+              Cette page est réservée aux superadmins.
+            </p>
+            <Button className="mt-4" onClick={() => navigate('/') }>
+              Retour à l'accueil
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
