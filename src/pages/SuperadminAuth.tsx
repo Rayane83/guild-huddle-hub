@@ -10,8 +10,8 @@ const SuperadminAuthPage = () => {
   return (
     <>
       <SEOHead 
-        title="Connexion Superadmin - Portail Entreprise Flashback Fa"
-        description="Authentification sécurisée pour les superadministrateurs du portail Flashback Fa avec vérification par email."
+        title="Connexion Superadmin - Portail Flashback Fa"
+        description="Authentification superadmin sécurisée avec code email et mot de passe."
       />
       <SuperadminAuth onAuthSuccess={handleAuthSuccess} />
     </>

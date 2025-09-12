@@ -148,16 +148,33 @@ export function SuperadminAuth({ onAuthSuccess }: SuperadminAuthProps) {
       });
 
       if (error) {
-        // Handle specific error types
-        if (error.type === 'EMAIL_ALREADY_EXISTS') {
-          setError('Cet email est déjà enregistré. Essayez de vous connecter dans l\'onglet "Connexion".');
-        } else if (error.type === 'UNIQUE_ID_ALREADY_EXISTS') {
-          setError('Cet ID unique est déjà utilisé. Veuillez en choisir un autre.');
-        } else if (error.type === 'INVALID_ACCESS_CODE') {
-          setError('Code d\'accès invalide. Contactez un superadmin pour obtenir le bon code.');
-        } else {
-          setError(error.error || error.message || 'Erreur lors de l\'inscription');
-        }
+        let msg = error.message || "Erreur lors de l'inscription";
+        const body = (error as any)?.context?.body;
+        try {
+          const parsed = typeof body === 'string' ? JSON.parse(body) : body;
+          if (parsed?.error) msg = parsed.error;
+          switch (parsed?.type) {
+            case 'EMAIL_ALREADY_EXISTS':
+              msg = 'Cet email est déjà enregistré. Essayez de vous connecter dans l\'onglet "Connexion".';
+              break;
+            case 'UNIQUE_ID_ALREADY_EXISTS':
+              msg = 'Cet ID unique est déjà utilisé. Veuillez en choisir un autre.';
+              break;
+            case 'INVALID_ACCESS_CODE':
+              msg = 'Code d\'accès invalide. Contactez un superadmin pour obtenir le bon code.';
+              break;
+            case 'DISCORD_ID_ALREADY_EXISTS':
+              msg = 'Cet ID Discord est déjà utilisé.';
+              break;
+            case 'WEAK_PASSWORD':
+              msg = 'Mot de passe trop faible.';
+              break;
+            case 'NOT_SUPERADMIN':
+              msg = 'Accès réservé aux superadmins';
+              break;
+          }
+        } catch {}
+        setError(msg);
         return;
       }
 
@@ -178,17 +195,33 @@ export function SuperadminAuth({ onAuthSuccess }: SuperadminAuthProps) {
       });
     } catch (err: any) {
       console.error('Register error:', err);
-      
-      // Handle network or parsing errors
-      if (err.message?.includes('EMAIL_ALREADY_EXISTS')) {
-        setError('Cet email est déjà enregistré. Essayez de vous connecter dans l\'onglet "Connexion".');
-      } else if (err.message?.includes('UNIQUE_ID_ALREADY_EXISTS')) {
-        setError('Cet ID unique est déjà utilisé. Veuillez en choisir un autre.');
-      } else if (err.message?.includes('INVALID_ACCESS_CODE')) {
-        setError('Code d\'accès invalide. Contactez un superadmin pour obtenir le bon code.');
-      } else {
-        setError(err.message || 'Erreur lors de l\'inscription');
-      }
+      let msg = err?.message || 'Erreur lors de l\'inscription';
+      const body = err?.context?.body;
+      try {
+        const parsed = typeof body === 'string' ? JSON.parse(body) : body;
+        if (parsed?.error) msg = parsed.error;
+        switch (parsed?.type) {
+          case 'EMAIL_ALREADY_EXISTS':
+            msg = 'Cet email est déjà enregistré. Essayez de vous connecter dans l\'onglet "Connexion".';
+            break;
+          case 'UNIQUE_ID_ALREADY_EXISTS':
+            msg = 'Cet ID unique est déjà utilisé. Veuillez en choisir un autre.';
+            break;
+          case 'INVALID_ACCESS_CODE':
+            msg = 'Code d\'accès invalide. Contactez un superadmin pour obtenir le bon code.';
+            break;
+          case 'DISCORD_ID_ALREADY_EXISTS':
+            msg = 'Cet ID Discord est déjà utilisé.';
+            break;
+          case 'WEAK_PASSWORD':
+            msg = 'Mot de passe trop faible.';
+            break;
+          case 'NOT_SUPERADMIN':
+            msg = 'Accès réservé aux superadmins';
+            break;
+        }
+      } catch {}
+      setError(msg);
     } finally {
       setIsLoading(false);
     }
@@ -223,7 +256,15 @@ export function SuperadminAuth({ onAuthSuccess }: SuperadminAuthProps) {
       setResetForm({ targetEmail: '' });
     } catch (err: any) {
       console.error('Reset password error:', err);
-      setError(err.message || 'Erreur lors de la réinitialisation');
+      let msg = err?.message || 'Erreur lors de la réinitialisation';
+      const body = err?.context?.body;
+      try {
+        const parsed = typeof body === 'string' ? JSON.parse(body) : body;
+        if (parsed?.error) msg = parsed.error;
+        if (parsed?.type === 'USER_NOT_FOUND') msg = 'Utilisateur non trouvé';
+        if (parsed?.type === 'NOT_SUPERADMIN') msg = 'Accès réservé aux superadmins';
+      } catch {}
+      setError(msg);
     } finally {
       setIsLoading(false);
     }
