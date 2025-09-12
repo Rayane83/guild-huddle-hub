@@ -417,15 +417,7 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           discord_id: string | null
-          email: string | null
-          hwid: string | null
-          hwid_reset_count: number | null
           id: string
-          is_superstaff: boolean | null
-          last_hwid_reset: string | null
-          password_hash: string | null
-          registration_date: string | null
-          unique_id: string | null
           updated_at: string
           user_id: string
           username: string | null
@@ -434,15 +426,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           discord_id?: string | null
-          email?: string | null
-          hwid?: string | null
-          hwid_reset_count?: number | null
           id?: string
-          is_superstaff?: boolean | null
-          last_hwid_reset?: string | null
-          password_hash?: string | null
-          registration_date?: string | null
-          unique_id?: string | null
           updated_at?: string
           user_id: string
           username?: string | null
@@ -451,15 +435,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           discord_id?: string | null
-          email?: string | null
-          hwid?: string | null
-          hwid_reset_count?: number | null
           id?: string
-          is_superstaff?: boolean | null
-          last_hwid_reset?: string | null
-          password_hash?: string | null
-          registration_date?: string | null
-          unique_id?: string | null
           updated_at?: string
           user_id?: string
           username?: string | null
@@ -501,10 +477,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      check_hwid_access: {
-        Args: { target_hwid: string; target_profile_id: string }
-        Returns: Json
-      }
       check_hwid_access_secure: {
         Args: { target_hwid: string; target_user_id: string }
         Returns: Json
@@ -513,9 +485,17 @@ export type Database = {
         Args: { target_hwip: string; target_profile_id: string }
         Returns: Json
       }
-      reset_hwid: {
-        Args: { target_profile_id: string }
-        Returns: Json
+      get_user_security_info: {
+        Args: { target_user_id?: string }
+        Returns: {
+          email: string
+          hwid_registered: boolean
+          is_superstaff: boolean
+          registration_date: string
+          reset_count: number
+          unique_id: string
+          user_id: string
+        }[]
       }
       reset_hwid_secure: {
         Args: { target_user_id: string }
