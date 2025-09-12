@@ -49,8 +49,8 @@ export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
       onAuthSuccess();
     } catch (err: any) {
       console.error('Login error:', err);
-      if (err.message?.includes('HWIP')) {
-        setError('Connexion refusée : Votre appareil n\'est pas autorisé. Contactez un superstaff pour réinitialiser votre HWIP.');
+      if (err.message?.includes('HWID') || err.message?.includes('HWIP')) {
+        setError('Connexion refusée : Votre appareil n\'est pas autorisé. Contactez un superstaff pour réinitialiser votre HWID.');
       } else {
         setError(err.message || 'Erreur de connexion');
       }
@@ -139,7 +139,7 @@ export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
             Portail Entreprise Flashback Fa
           </h1>
           <p className="mt-3 text-lg text-muted-foreground">
-            Authentification sécurisée avec protection HWIP
+            Authentification sécurisée avec protection HWID
           </p>
         </div>
 
@@ -332,7 +332,7 @@ export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
         <div className="text-center mt-6 space-y-2">
           <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
             <Shield className="w-4 h-4 text-primary" />
-            <span>Protection HWIP activée</span>
+            <span>Protection HWID activée</span>
           </div>
           <p className="text-xs text-muted-foreground">
             Un seul appareil par compte. Contactez un superstaff pour changer d'appareil.

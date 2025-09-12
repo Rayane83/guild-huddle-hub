@@ -7,7 +7,7 @@ export interface CustomAuthState {
   profile: any | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  isHwipBlocked: boolean;
+  isHwidBlocked: boolean;
 }
 
 export function useCustomAuth() {
@@ -16,7 +16,7 @@ export function useCustomAuth() {
     profile: null,
     isLoading: true,
     isAuthenticated: false,
-    isHwipBlocked: false,
+    isHwidBlocked: false,
   });
 
   const checkAuthStatus = useCallback(async () => {
@@ -43,20 +43,20 @@ export function useCustomAuth() {
           return;
         }
 
-        // Vérifier le HWIP si disponible
-        const currentHwip = await getCurrentHwip();
-        const { data: hwipCheck } = await supabase.rpc('check_hwip_access', {
-          target_hwip: currentHwip,
+        // Vérifier le HWID si disponible
+        const currentHwid = await getCurrentHwid();
+        const { data: hwidCheck } = await supabase.rpc('check_hwip_access', {
+          target_hwip: currentHwid,
           target_profile_id: profile.id
         });
 
-        if (hwipCheck && typeof hwipCheck === 'object' && 'allowed' in hwipCheck && !hwipCheck.allowed) {
+        if (hwidCheck && typeof hwidCheck === 'object' && 'allowed' in hwidCheck && !hwidCheck.allowed) {
           setAuthState({
             user: null,
             profile: null,
             isLoading: false,
             isAuthenticated: false,
-            isHwipBlocked: true,
+            isHwidBlocked: true,
           });
           
           // Déconnecter l'utilisateur
@@ -76,7 +76,7 @@ export function useCustomAuth() {
           profile,
           isLoading: false,
           isAuthenticated: true,
-          isHwipBlocked: false,
+          isHwidBlocked: false,
         });
       } else {
         setAuthState({
@@ -84,7 +84,7 @@ export function useCustomAuth() {
           profile: null,
           isLoading: false,
           isAuthenticated: false,
-          isHwipBlocked: false,
+          isHwidBlocked: false,
         });
       }
     } catch (error) {
@@ -94,7 +94,7 @@ export function useCustomAuth() {
         profile: null,
         isLoading: false,
         isAuthenticated: false,
-        isHwipBlocked: false,
+        isHwidBlocked: false,
       });
     }
   }, []);
@@ -119,14 +119,14 @@ export function useCustomAuth() {
   const signIn = useCallback(async (identifier: string, password: string) => {
     try {
       // Appeler l'edge function d'authentification
-      const hwip = await getCurrentHwip();
+      const hwid = await getCurrentHwid();
       
       const { data, error } = await supabase.functions.invoke('custom-auth', {
         body: {
           action: 'login',
           identifier,
           password,
-          hwip
+          hwid
         }
       });
 
@@ -148,13 +148,13 @@ export function useCustomAuth() {
     password: string;
   }) => {
     try {
-      const hwip = await getCurrentHwip();
+      const hwid = await getCurrentHwid();
       
       const { data, error } = await supabase.functions.invoke('custom-auth', {
         body: {
           action: 'register',
           ...userData,
-          hwip
+          hwid
         }
       });
 
@@ -182,7 +182,7 @@ export function useCustomAuth() {
     }
   }, []);
 
-  const resetHwip = useCallback(async (profileId: string) => {
+  const resetHwid = useCallback(async (profileId: string) => {
     try {
       const { data, error } = await supabase.rpc('reset_hwip', {
         target_profile_id: profileId
@@ -194,7 +194,7 @@ export function useCustomAuth() {
 
       return data;
     } catch (error) {
-      console.error('Reset HWIP error:', error);
+      console.error('Reset HWID error:', error);
       throw error;
     }
   }, []);
@@ -204,33 +204,99 @@ export function useCustomAuth() {
     signIn,
     signUp,
     signOut,
-    resetHwip,
+    resetHwid,
     refreshAuth: checkAuthStatus,
   };
 }
 
-// Fonction utilitaire pour obtenir le HWIP actuel
-async function getCurrentHwip(): Promise<string> {
-  // Générer un HWIP basé sur plusieurs facteurs du navigateur
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
-  ctx?.fillText('HWIP', 10, 50);
-  const canvasFingerprint = canvas.toDataURL();
-  
-  const screenFingerprint = `${screen.width}x${screen.height}x${screen.colorDepth}`;
-  const timezoneFingerprint = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const languageFingerprint = navigator.language;
-  const platformFingerprint = navigator.platform;
-  
-  const combined = `${canvasFingerprint}-${screenFingerprint}-${timezoneFingerprint}-${languageFingerprint}-${platformFingerprint}`;
-  
-  // Hash simple (dans un vrai projet, utilisez une lib crypto)
-  let hash = 0;
-  for (let i = 0; i < combined.length; i++) {
-    const char = combined.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32bit integer
+// Fonction utilitaire pour obtenir le HWID actuel
+async function getCurrentHwid(): Promise<string> {
+  try {
+    // Collecte des informations hardware/système disponibles dans le navigateur
+    const hwComponents = [];
+    
+    // 1. Informations écran (résolution native, densité pixels)
+    hwComponents.push(`screen:${screen.width}x${screen.height}x${screen.colorDepth}x${devicePixelRatio}`);
+    
+    // 2. Informations navigateur/OS
+    hwComponents.push(`platform:${navigator.platform}`);
+    hwComponents.push(`useragent:${navigator.userAgent.slice(0, 50)}`); // Limité pour éviter les variations
+    
+    // 3. Timezone (stable pour une machine)
+    hwComponents.push(`tz:${Intl.DateTimeFormat().resolvedOptions().timeZone}`);
+    
+    // 4. Langues système
+    hwComponents.push(`lang:${navigator.language}`);
+    
+    // 5. Informations matérielles disponibles
+    if ('hardwareConcurrency' in navigator) {
+      hwComponents.push(`cores:${navigator.hardwareConcurrency}`);
+    }
+    
+    // 6. Informations mémoire (si disponible)
+    if ('deviceMemory' in navigator) {
+      hwComponents.push(`ram:${(navigator as any).deviceMemory}`);
+    }
+    
+    // 7. Canvas fingerprint (stable pour même GPU/drivers)
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.textBaseline = 'top';
+      ctx.font = '14px Arial';
+      ctx.fillText('HWID-Generator-2024', 2, 2);
+      hwComponents.push(`canvas:${canvas.toDataURL().slice(-20)}`); // Derniers 20 chars seulement
+    }
+    
+    // 8. WebGL fingerprint (GPU spécifique)
+    try {
+      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl') as WebGLRenderingContext | null;
+      if (gl && 'getParameter' in gl) {
+        const renderer = gl.getParameter(gl.RENDERER);
+        const vendor = gl.getParameter(gl.VENDOR);
+        hwComponents.push(`gpu:${vendor}-${renderer}`.slice(0, 30));
+      }
+    } catch (e) {
+      // Ignorer les erreurs WebGL
+    }
+    
+    // 9. Fuseau horaire offset (plus stable que Date.now())
+    hwComponents.push(`offset:${new Date().getTimezoneOffset()}`);
+    
+    // 10. Informations MediaDevices (audio/vidéo hardware)
+    try {
+      if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const audioInputs = devices.filter(d => d.kind === 'audioinput').length;
+        const videoInputs = devices.filter(d => d.kind === 'videoinput').length;
+        const audioOutputs = devices.filter(d => d.kind === 'audiooutput').length;
+        hwComponents.push(`media:${audioInputs}a${videoInputs}v${audioOutputs}o`);
+      }
+    } catch (e) {
+      // Permissions pas accordées ou pas supportées
+    }
+    
+    // Combiner tous les composants
+    const combined = hwComponents.join('|');
+    
+    // Générer un hash stable
+    let hash = 0;
+    for (let i = 0; i < combined.length; i++) {
+      const char = combined.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    
+    // Convertir en hexadécimal avec préfixe pour identifier le type
+    const hwid = `HWID-${Math.abs(hash).toString(16).toUpperCase()}`;
+    
+    console.log('Generated HWID:', hwid);
+    return hwid;
+    
+  } catch (error) {
+    console.error('Error generating HWID:', error);
+    // Fallback simple si erreur
+    const fallback = `HWID-FALLBACK-${Math.random().toString(16).slice(2).toUpperCase()}`;
+    return fallback;
   }
-  
-  return Math.abs(hash).toString(16);
 }

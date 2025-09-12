@@ -104,8 +104,8 @@ export function HwipManager() {
     }
   };
 
-  const resetHwip = async (profileId: string, uniqueId: string) => {
-    if (!confirm(`Êtes-vous sûr de vouloir réinitialiser le HWIP de ${uniqueId} ?`)) {
+  const resetHwid = async (profileId: string, uniqueId: string) => {
+    if (!confirm(`Êtes-vous sûr de vouloir réinitialiser le HWID de ${uniqueId} ?`)) {
       return;
     }
 
@@ -121,8 +121,8 @@ export function HwipManager() {
 
       if (data && typeof data === 'object' && 'success' in data && data.success) {
         toast({
-          title: "HWIP réinitialisé",
-          description: `Le HWIP de ${uniqueId} a été réinitialisé avec succès`,
+          title: "HWID réinitialisé",
+          description: `Le HWID de ${uniqueId} a été réinitialisé avec succès`,
         });
         loadProfiles();
         loadAuditLogs();
@@ -131,10 +131,10 @@ export function HwipManager() {
         throw new Error(reason as string);
       }
     } catch (error) {
-      console.error('Error resetting HWIP:', error);
+      console.error('Error resetting HWID:', error);
       toast({
         title: "Erreur",
-        description: "Impossible de réinitialiser le HWIP",
+        description: "Impossible de réinitialiser le HWID",
         variant: "destructive",
       });
     } finally {
@@ -203,8 +203,8 @@ export function HwipManager() {
       <div className="flex items-center gap-3">
         <Shield className="w-8 h-8 text-primary" />
         <div>
-          <h1 className="text-2xl font-bold">Gestion des HWIP</h1>
-          <p className="text-muted-foreground">Administration des restrictions d'appareils</p>
+        <h1 className="text-2xl font-bold">Gestion des HWID</h1>
+        <p className="text-muted-foreground">Administration des restrictions d'appareils</p>
         </div>
       </div>
 
@@ -227,7 +227,7 @@ export function HwipManager() {
             <div className="flex items-center gap-2">
               <Shield className="w-5 h-5 text-green-500" />
               <div>
-                <p className="text-sm text-muted-foreground">HWIP Enregistrés</p>
+                <p className="text-sm text-muted-foreground">HWID Enregistrés</p>
                 <p className="text-2xl font-bold">{profiles.filter(p => p.hwip).length}</p>
               </div>
             </div>
@@ -268,7 +268,7 @@ export function HwipManager() {
             <Users className="w-5 h-5" />
             Gestion des Utilisateurs
           </CardTitle>
-          <CardDescription>Rechercher et gérer les utilisateurs et leurs HWIP</CardDescription>
+          <CardDescription>Rechercher et gérer les utilisateurs et leurs HWID</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-4 mb-6">
@@ -293,7 +293,7 @@ export function HwipManager() {
                 <TableRow>
                   <TableHead>Utilisateur</TableHead>
                   <TableHead>Email</TableHead>
-                  <TableHead>HWIP</TableHead>
+                  <TableHead>HWID</TableHead>
                   <TableHead>Réinitialisations</TableHead>
                   <TableHead>Statut</TableHead>
                   <TableHead>Actions</TableHead>
@@ -347,7 +347,7 @@ export function HwipManager() {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => resetHwip(profile.id, profile.unique_id)}
+                            onClick={() => resetHwid(profile.id, profile.unique_id)}
                             disabled={isLoading}
                           >
                             <RotateCcw className="w-4 h-4" />
@@ -378,7 +378,7 @@ export function HwipManager() {
             <Activity className="w-5 h-5" />
             Logs d'Audit HWIP
           </CardTitle>
-          <CardDescription>Historique des tentatives de connexion et modifications HWIP</CardDescription>
+          <CardDescription>Historique des tentatives de connexion et modifications HWID</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="border rounded-lg">
@@ -386,7 +386,7 @@ export function HwipManager() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Utilisateur</TableHead>
-                  <TableHead>HWIP</TableHead>
+                  <TableHead>HWID</TableHead>
                   <TableHead>Date/Heure</TableHead>
                   <TableHead>Résultat</TableHead>
                   <TableHead>Raison</TableHead>

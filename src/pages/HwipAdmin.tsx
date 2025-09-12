@@ -31,10 +31,10 @@ export default function HwipAdminPage() {
 
   return (
     <>
-      <SEOHead 
-        title="Administration HWIP - Portail Entreprise Flashback Fa"
-        description="Gestion des restrictions d'appareils et administration des utilisateurs."
-      />
+        <SEOHead 
+          title="Administration HWID - Portail Entreprise Flashback Fa"
+          description="Gestion des restrictions d'appareils et administration des utilisateurs."
+        />
       <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-8">
           <HwipManager />

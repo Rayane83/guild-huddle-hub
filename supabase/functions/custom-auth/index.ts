@@ -24,14 +24,14 @@ serve(async (req) => {
       }
     });
 
-    const { action, identifier, password, uniqueId, discordId, email, hwip } = await req.json();
+    const { action, identifier, password, uniqueId, discordId, email, hwid } = await req.json();
 
-    console.log(`Custom auth request: ${action}`, { identifier, uniqueId, email, hwip });
+    console.log(`Custom auth request: ${action}`, { identifier, uniqueId, email, hwid });
 
     if (action === 'register') {
-      return await handleRegister(supabase, { uniqueId, discordId, email, password, hwip });
+      return await handleRegister(supabase, { uniqueId, discordId, email, password, hwid });
     } else if (action === 'login') {
-      return await handleLogin(supabase, { identifier, password, hwip });
+      return await handleLogin(supabase, { identifier, password, hwid });
     } else {
       return new Response(
         JSON.stringify({ success: false, message: 'Action non supportée' }),
@@ -52,10 +52,10 @@ async function handleRegister(supabase: any, userData: {
   discordId: string;
   email: string;
   password: string;
-  hwip: string;
+  hwid: string;
 }) {
   try {
-    const { uniqueId, discordId, email, password, hwip } = userData;
+    const { uniqueId, discordId, email, password, hwid } = userData;
 
     // Vérifier si l'ID unique existe déjà
     const { data: existingProfile } = await supabase
@@ -126,7 +126,7 @@ async function handleRegister(supabase: any, userData: {
         discord_id: discordId,
         email: email,
         password_hash: passwordHash,
-        hwip: hwip,
+        hwip: hwid,
         username: uniqueId,
         registration_date: new Date().toISOString()
       });
@@ -165,10 +165,10 @@ async function handleRegister(supabase: any, userData: {
 async function handleLogin(supabase: any, loginData: {
   identifier: string;
   password: string;
-  hwip: string;
+  hwid: string;
 }) {
   try {
-    const { identifier, password, hwip } = loginData;
+    const { identifier, password, hwid } = loginData;
 
     // Chercher l'utilisateur par unique_id ou email
     const { data: profile, error: profileError } = await supabase
@@ -193,19 +193,19 @@ async function handleLogin(supabase: any, loginData: {
       );
     }
 
-    // Vérifier le HWIP
-    const { data: hwipCheck } = await supabase.rpc('check_hwip_access', {
-      target_hwip: hwip,
+    // Vérifier le HWID
+    const { data: hwidCheck } = await supabase.rpc('check_hwip_access', {
+      target_hwip: hwid,
       target_profile_id: profile.id
     });
 
-    if (!hwipCheck.allowed) {
+    if (!hwidCheck.allowed) {
       // Logger la tentative
       await supabase.from('hwip_audit').insert({
         profile_id: profile.id,
-        hwip: hwip,
+        hwip: hwid,
         success: false,
-        reason: hwipCheck.reason,
+        reason: hwidCheck.reason,
         user_agent: 'Custom Auth'
       });
 
@@ -213,7 +213,7 @@ async function handleLogin(supabase: any, loginData: {
         JSON.stringify({ 
           success: false, 
           message: 'Appareil non autorisé', 
-          code: 'HWIP_MISMATCH' 
+          code: 'HWID_MISMATCH' 
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
       );
@@ -222,7 +222,7 @@ async function handleLogin(supabase: any, loginData: {
     // Logger la connexion réussie
     await supabase.from('hwip_audit').insert({
       profile_id: profile.id,
-      hwip: hwip,
+      hwip: hwid,
       success: true,
       reason: 'login_success',
       user_agent: 'Custom Auth'

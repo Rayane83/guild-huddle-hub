@@ -104,7 +104,7 @@ const Index = () => {
     );
   }
   
-  if (auth.isHwipBlocked) {
+  if (auth.isHwidBlocked) {
     return (
       <>
         <SEOHead 
@@ -117,7 +117,7 @@ const Index = () => {
             <h1 className="text-2xl font-bold text-destructive">Accès bloqué</h1>
             <p className="text-muted-foreground max-w-md">
               Votre appareil n'est pas autorisé à accéder au portail. 
-              Contactez un superstaff pour réinitialiser votre HWIP.
+              Contactez un superstaff pour réinitialiser votre HWID.
             </p>
             <Button onClick={auth.signOut} variant="outline">
               Retour à la connexion
@@ -202,7 +202,7 @@ const Index = () => {
                     </RoleGate>
                     <RoleGate allow={() => auth.profile?.is_superstaff === true} currentRole={guildRoles.currentRole}>
                       <DropdownMenuItem asChild>
-                        <Link to="/hwip-admin">Gestion HWIP</Link>
+                        <Link to="/hwip-admin">Gestion HWID</Link>
                       </DropdownMenuItem>
                     </RoleGate>
                     <RoleGate allow={canAccessStaffConfig} currentRole={guildRoles.currentRole}>
