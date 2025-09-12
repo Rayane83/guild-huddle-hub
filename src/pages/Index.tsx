@@ -9,6 +9,7 @@ import { LoginScreen } from '@/components/LoginScreen';
 import { SEOHead } from '@/components/SEOHead';
 import { RoleGate } from '@/components/RoleGate';
 import { NewDashboard } from '@/components/NewDashboard';
+import { DashboardSummary } from '@/components/DashboardSummary';
 import { DotationForm } from '@/components/DotationForm';
 import { ImpotForm } from '@/components/ImpotForm';
 import { BlanchimentToggle } from '@/components/BlanchimentToggle';
@@ -311,8 +312,7 @@ const Index = () => {
               <RoleGate allow={canAccessBlanchiment} currentRole={guildRoles.currentRole}>
                 <BlanchimentToggle 
                   guildId={guilds.selectedGuildId}
-                  entreprise={guildRoles.entreprise}
-                  currentRole={getRoleDisplayName(guildRoles.currentRole)}
+                  entrepriseKey={guildRoles.entreprise}
                 />
               </RoleGate>
             </TabsContent>

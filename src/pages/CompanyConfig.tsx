@@ -72,7 +72,7 @@ export default function CompanyConfigPage() {
   const guildId = query.get("guild") || "";
   const [currentRole, setCurrentRole] = useState<Role>("employe");
 
-  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [employees, setEmployees] = useState<any[]>([]);
   const [cfg, setCfg] = useState<CompanyConfig>(defaultCompanyConfig);
   const [salaryPaliers, setSalaryPaliers] = useState<Bracket[]>([]);
   const { toast } = useToast();
@@ -161,7 +161,7 @@ export default function CompanyConfigPage() {
   const parseAndMergeEmployees = (text: string) => {
     const lines = text.split(/\r?\n/).filter(Boolean);
     const rows = lines.map((l) => l.split(/[\t,;]/).map((s) => s.trim()));
-    const mapped: Employee[] = rows.map((cols, i) => ({
+    const mapped: any[] = rows.map((cols, i) => ({
       id: `${Date.now()}-${i}`,
       name: cols[0] || `Employé ${i + 1}`,
       discordRole: cols[1] || "",
