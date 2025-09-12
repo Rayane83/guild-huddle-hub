@@ -569,9 +569,17 @@ export type Database = {
         Args: { target_profile_id: string }
         Returns: Json
       }
+      store_auth_code: {
+        Args: { auth_code: string; target_email: string }
+        Returns: Json
+      }
       user_can_access_enterprise: {
         Args: { target_enterprise_id: string }
         Returns: boolean
+      }
+      validate_and_consume_auth_code: {
+        Args: { target_code: string; target_email: string }
+        Returns: Json
       }
       verify_user_hwid_secure: {
         Args: { target_hwid: string }

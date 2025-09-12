@@ -98,17 +98,14 @@ async function handleSendLoginCode(data: any) {
   // Nettoyer les anciens codes expirés
   await supabase.rpc('cleanup_expired_codes');
   
-  // Stocker le code dans la base de données de manière sécurisée
-  const { error: insertError } = await supabase
-    .from('auth_temp_codes')
-    .insert({
-      email,
-      code,
-      expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString() // 10 minutes
-    });
+  // Stocker le code de manière sécurisée via la nouvelle fonction
+  const { data: storeResult, error: storeError } = await supabase.rpc('store_auth_code', {
+    target_email: email,
+    auth_code: code
+  });
 
-  if (insertError) {
-    console.error('Erreur lors du stockage du code:', insertError);
+  if (storeError || !storeResult?.success) {
+    console.error('Erreur lors du stockage du code:', storeError);
     throw new Error('Erreur lors de la génération du code');
   }
 
@@ -142,17 +139,13 @@ async function handleSendLoginCode(data: any) {
 async function handleVerifyLoginCode(data: any) {
   const { email, code, password } = data;
 
-  // Vérifier le code dans la base de données
-  const { data: codeData, error: codeError } = await supabase
-    .from('auth_temp_codes')
-    .select('*')
-    .eq('code', code)
-    .eq('email', email)
-    .eq('used', false)
-    .gt('expires_at', new Date().toISOString())
-    .single();
+  // Valider et consommer le code de manière sécurisée
+  const { data: codeValidation, error: codeError } = await supabase.rpc('validate_and_consume_auth_code', {
+    target_email: email,
+    target_code: code
+  });
 
-  if (codeError || !codeData) {
+  if (codeError || !codeValidation?.valid) {
     throw new Error('Code invalide ou expiré');
   }
 
@@ -173,11 +166,7 @@ async function handleVerifyLoginCode(data: any) {
     throw new Error('Mot de passe incorrect');
   }
 
-  // Marquer le code comme utilisé
-  await supabase
-    .from('auth_temp_codes')
-    .update({ used: true })
-    .eq('id', codeData.id);
+  // Le code a déjà été marqué comme utilisé par validate_and_consume_auth_code
 
   // Créer une session Supabase
   const { data: authData, error: authError } = await supabase.auth.admin.generateLink({
