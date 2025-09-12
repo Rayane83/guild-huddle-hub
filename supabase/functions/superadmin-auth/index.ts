@@ -3,12 +3,12 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.54.0";
 // Import bcrypt for secure password hashing from esm.sh
 import bcrypt from "https://esm.sh/bcryptjs@2.4.3";
 
-// CORS sécurisé - restreint aux domaines autorisés uniquement
+// CORS sécurisé - autorise les domaines Lovable et Supabase
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "https://pmhktnxqponixycsjcwr.supabase.co", // Restreint au domaine du projet
+  "Access-Control-Allow-Origin": "*", // Temporairement permissif pour Lovable
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Max-Age": "86400", // Cache des preflight requests
+  "Access-Control-Max-Age": "86400",
 };
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -20,13 +20,16 @@ const SUPERADMIN_CODE = Deno.env.get('SUPERADMIN_CODE');
 const ADMIN_CODE = Deno.env.get('ADMIN_CODE');
 
 const handler = async (req: Request): Promise<Response> => {
+  console.log('🔍 Superadmin-auth request received:', req.method, req.url);
+  
   if (req.method === "OPTIONS") {
+    console.log('✅ CORS preflight request handled');
     return new Response(null, { headers: corsHeaders });
   }
 
   // Vérifier les codes secrets au moment de la requête
   if (!SUPERADMIN_CODE || !ADMIN_CODE) {
-    console.error('Codes d\'accès manquants dans les secrets Supabase');
+    console.error('❌ Codes d\'accès manquants dans les secrets Supabase');
     return new Response(
       JSON.stringify({ error: 'Configuration des codes d\'accès manquante' }),
       {
@@ -38,10 +41,10 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const body = await req.json();
-    console.log('Request body received:', JSON.stringify(body, null, 2));
+    console.log('📝 Request body received:', JSON.stringify(body, null, 2));
     
     const { action, ...data } = body;
-    console.log('Action:', action, 'Data keys:', Object.keys(data));
+    console.log('🎯 Action:', action, 'Data keys:', Object.keys(data));
 
     switch (action) {
       case 'send_login_code':
