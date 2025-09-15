@@ -16,6 +16,9 @@ import { BlanchimentToggle } from '@/components/BlanchimentToggle';
 import { ArchiveTable } from '@/components/ArchiveTable';
 import { DocsUpload } from '@/components/DocsUpload';
 import { StaffConfig } from '@/components/StaffConfig';
+import { AccountingManager } from '@/components/AccountingManager';
+import { AdvancedSalaryCalculatorWithFiscal } from '@/components/AdvancedSalaryCalculatorWithFiscal';
+import { EmployeeQualifications } from '@/components/EmployeeQualifications';
 
 // Hooks
 import { useStandardAuth, UserRole } from '@/hooks/useStandardAuth';
@@ -219,7 +222,7 @@ const Index = () => {
 
         <main className="container mx-auto px-4 py-8">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-7 mb-8">
+            <TabsList className="grid w-full grid-cols-10 mb-8">
               <RoleGate 
                 allow={(role) => true}
                 currentRole={legacyRole}
@@ -341,6 +344,25 @@ const Index = () => {
                     </div>
                   </CardContent>
                 </Card>
+              </TabsContent>
+              
+              <TabsContent value="accounting">
+                <AccountingManager 
+                  enterpriseId={enterprises[0]?.id || ''} 
+                  guildId={guilds.selectedGuildId} 
+                />
+              </TabsContent>
+              
+              <TabsContent value="advanced-salary">
+                <AdvancedSalaryCalculatorWithFiscal 
+                  enterpriseId={enterprises[0]?.id || ''} 
+                  guildId={guilds.selectedGuildId}
+                  currentProfit={0}
+                />
+              </TabsContent>
+              
+              <TabsContent value="qualifications">
+                <EmployeeQualifications enterpriseId={enterprises[0]?.id || ''} />
               </TabsContent>
             </RoleGate>
           </Tabs>

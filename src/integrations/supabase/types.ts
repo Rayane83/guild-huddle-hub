@@ -45,7 +45,15 @@ export type Database = {
           transaction_date?: string
           transaction_type?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_accounting_transactions_accounting"
+            columns: ["accounting_id"]
+            isOneToOne: false
+            referencedRelation: "company_accounting"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       archives: {
         Row: {
@@ -291,7 +299,15 @@ export type Database = {
           unique_identifier?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_employee_qualifications_employee"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       employees: {
         Row: {
@@ -692,7 +708,15 @@ export type Database = {
           tax_bracket_used?: string | null
           total_revenue?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_salary_calculations_employee"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tax_brackets: {
         Row: {
