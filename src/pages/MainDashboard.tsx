@@ -186,22 +186,40 @@ const MainDashboard: React.FC = () => {
         {canAccessAdvancedFeatures(userRole) && (
           <>
             <TabsContent value="accounting">
-              <AccountingManager 
-                enterpriseId={enterpriseId} 
-                guildId={guildId} 
-              />
+              {enterpriseId ? (
+                <AccountingManager 
+                  enterpriseId={enterpriseId} 
+                  guildId={guildId} 
+                />
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p>Aucune entreprise sélectionnée. Contactez un administrateur.</p>
+                </div>
+              )}
             </TabsContent>
             
             <TabsContent value="advanced-salary">
-              <AdvancedSalaryCalculatorWithFiscal 
-                enterpriseId={enterpriseId} 
-                guildId={guildId}
-                currentProfit={0}
-              />
+              {enterpriseId ? (
+                <AdvancedSalaryCalculatorWithFiscal 
+                  enterpriseId={enterpriseId} 
+                  guildId={guildId}
+                  currentProfit={0}
+                />
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p>Aucune entreprise sélectionnée. Contactez un administrateur.</p>
+                </div>
+              )}
             </TabsContent>
             
             <TabsContent value="qualifications">
-              <EmployeeQualifications enterpriseId={enterpriseId} />
+              {enterpriseId ? (
+                <EmployeeQualifications enterpriseId={enterpriseId} />
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p>Aucune entreprise sélectionnée. Contactez un administrateur.</p>
+                </div>
+              )}
             </TabsContent>
           </>
         )}
