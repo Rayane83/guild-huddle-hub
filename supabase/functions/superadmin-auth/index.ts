@@ -52,7 +52,7 @@ const handler = async (req: Request): Promise<Response> => {
         return await handleSendLoginCode(data);
       case 'verify_login_code':
         console.log('Handling verify_login_code');
-        return await handleVerifyLoginCode(data);
+        return await handleVerifyLoginCode(data, req);
       case 'register_with_code':
         console.log('Handling register_with_code');
         return await handleRegisterWithCode(data);
@@ -141,7 +141,7 @@ async function handleSendLoginCode(data: any) {
   });
 }
 
-async function handleVerifyLoginCode(data: any) {
+async function handleVerifyLoginCode(data: any, req: Request) {
   const { email, code, password } = data;
 
   // Valider et consommer le code de manière sécurisée
