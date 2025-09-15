@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      accounting_transactions: {
+        Row: {
+          accounting_id: string
+          amount: number
+          created_at: string
+          created_by: string | null
+          id: string
+          justification: string
+          transaction_date: string
+          transaction_type: string
+        }
+        Insert: {
+          accounting_id: string
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          justification: string
+          transaction_date: string
+          transaction_type: string
+        }
+        Update: {
+          accounting_id?: string
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          justification?: string
+          transaction_date?: string
+          transaction_type?: string
+        }
+        Relationships: []
+      }
       archives: {
         Row: {
           created_at: string
@@ -125,6 +158,66 @@ export type Database = {
         }
         Relationships: []
       }
+      company_accounting: {
+        Row: {
+          accounting_period_end: string
+          accounting_period_start: string
+          bank_balance: number
+          created_at: string
+          deductible_expenses: number
+          employee_count: number
+          enterprise_id: string
+          gross_revenue: number
+          id: string
+          net_profit: number
+          profit_after_bonuses: number
+          profit_after_tax: number
+          tax_amount: number
+          tax_rate: number
+          total_bonuses: number
+          updated_at: string
+          wealth_tax: number
+        }
+        Insert: {
+          accounting_period_end: string
+          accounting_period_start: string
+          bank_balance?: number
+          created_at?: string
+          deductible_expenses?: number
+          employee_count?: number
+          enterprise_id: string
+          gross_revenue?: number
+          id?: string
+          net_profit?: number
+          profit_after_bonuses?: number
+          profit_after_tax?: number
+          tax_amount?: number
+          tax_rate?: number
+          total_bonuses?: number
+          updated_at?: string
+          wealth_tax?: number
+        }
+        Update: {
+          accounting_period_end?: string
+          accounting_period_start?: string
+          bank_balance?: number
+          created_at?: string
+          deductible_expenses?: number
+          employee_count?: number
+          enterprise_id?: string
+          gross_revenue?: number
+          id?: string
+          net_profit?: number
+          profit_after_bonuses?: number
+          profit_after_tax?: number
+          tax_amount?: number
+          tax_rate?: number
+          total_bonuses?: number
+          updated_at?: string
+          wealth_tax?: number
+        }
+        Relationships: []
+      }
       discord_config: {
         Row: {
           client_id: string | null
@@ -148,6 +241,54 @@ export type Database = {
           data?: Json
           id?: string
           principal_guild_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      employee_qualifications: {
+        Row: {
+          accounting_diploma: boolean | null
+          arrival_date: string | null
+          bank_details: string | null
+          created_at: string
+          employee_id: string
+          hr_diploma: boolean | null
+          id: string
+          management_diploma: boolean | null
+          patronage_diploma: boolean | null
+          phone: string | null
+          start_date: string | null
+          unique_identifier: string | null
+          updated_at: string
+        }
+        Insert: {
+          accounting_diploma?: boolean | null
+          arrival_date?: string | null
+          bank_details?: string | null
+          created_at?: string
+          employee_id: string
+          hr_diploma?: boolean | null
+          id?: string
+          management_diploma?: boolean | null
+          patronage_diploma?: boolean | null
+          phone?: string | null
+          start_date?: string | null
+          unique_identifier?: string | null
+          updated_at?: string
+        }
+        Update: {
+          accounting_diploma?: boolean | null
+          arrival_date?: string | null
+          bank_details?: string | null
+          created_at?: string
+          employee_id?: string
+          hr_diploma?: boolean | null
+          id?: string
+          management_diploma?: boolean | null
+          patronage_diploma?: boolean | null
+          phone?: string | null
+          start_date?: string | null
+          unique_identifier?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -508,6 +649,93 @@ export type Database = {
         }
         Relationships: []
       }
+      salary_calculations: {
+        Row: {
+          calculated_bonus: number
+          calculated_salary: number
+          calculation_period_end: string
+          calculation_period_start: string
+          created_at: string
+          employee_id: string
+          id: string
+          invoices_count: number | null
+          run_count: number | null
+          sales_count: number | null
+          tax_bracket_used: string | null
+          total_revenue: number
+        }
+        Insert: {
+          calculated_bonus?: number
+          calculated_salary?: number
+          calculation_period_end: string
+          calculation_period_start: string
+          created_at?: string
+          employee_id: string
+          id?: string
+          invoices_count?: number | null
+          run_count?: number | null
+          sales_count?: number | null
+          tax_bracket_used?: string | null
+          total_revenue?: number
+        }
+        Update: {
+          calculated_bonus?: number
+          calculated_salary?: number
+          calculation_period_end?: string
+          calculation_period_start?: string
+          created_at?: string
+          employee_id?: string
+          id?: string
+          invoices_count?: number | null
+          run_count?: number | null
+          sales_count?: number | null
+          tax_bracket_used?: string | null
+          total_revenue?: number
+        }
+        Relationships: []
+      }
+      tax_brackets: {
+        Row: {
+          created_at: string
+          guild_id: string
+          id: string
+          max_boss_bonus: number
+          max_boss_salary: number
+          max_employee_bonus: number
+          max_employee_salary: number
+          max_profit: number
+          min_profit: number
+          tax_rate: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          guild_id: string
+          id?: string
+          max_boss_bonus?: number
+          max_boss_salary?: number
+          max_employee_bonus?: number
+          max_employee_salary?: number
+          max_profit?: number
+          min_profit?: number
+          tax_rate?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          guild_id?: string
+          id?: string
+          max_boss_bonus?: number
+          max_boss_salary?: number
+          max_employee_bonus?: number
+          max_employee_salary?: number
+          max_profit?: number
+          min_profit?: number
+          tax_rate?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           assigned_at: string
@@ -529,6 +757,33 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      wealth_tax_brackets: {
+        Row: {
+          created_at: string
+          guild_id: string
+          id: string
+          max_wealth: number
+          min_wealth: number
+          tax_rate: number
+        }
+        Insert: {
+          created_at?: string
+          guild_id: string
+          id?: string
+          max_wealth?: number
+          min_wealth?: number
+          tax_rate?: number
+        }
+        Update: {
+          created_at?: string
+          guild_id?: string
+          id?: string
+          max_wealth?: number
+          min_wealth?: number
+          tax_rate?: number
         }
         Relationships: []
       }
@@ -597,6 +852,10 @@ export type Database = {
       }
       is_current_user_superadmin: {
         Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_user_staff: {
+        Args: { user_id_param?: string }
         Returns: boolean
       }
       list_users_safe: {
