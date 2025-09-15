@@ -189,7 +189,7 @@ async function handleVerifyLoginCode(data: any) {
       id: credentials.user_id,
       email: credentials.email,
       uniqueId: credentials.unique_id,
-      isuperstaff: credentials.is_superstaff
+      is_superstaff: credentials.is_superstaff
     },
     magicLink: authData.properties?.action_link
   }), {
@@ -331,7 +331,7 @@ async function handleRegisterWithCode(data: any) {
       return new Response(JSON.stringify({ 
         success: true,
         message: `Compte ${isuperstaff ? 'superadmin' : 'admin'} mis à jour avec succès`,
-        user: { id: existingUserId, email, uniqueId, isuperstaff }
+        user: { id: existingUserId, email, uniqueId, is_superstaff: isuperstaff }
       }), {
         status: 200,
         headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -390,7 +390,7 @@ async function handleRegisterWithCode(data: any) {
       id: userId,
       email: email,
       uniqueId: uniqueId,
-      isuperstaff: isuperstaff
+      is_superstaff: isuperstaff
     }
   }), {
     status: 200,
