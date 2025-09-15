@@ -1,4 +1,5 @@
-import { MoneyLaunderingManager } from './MoneyLaunderingManager';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AlertTriangle } from 'lucide-react';
 
 interface BlanchimentToggleProps {
   guildId: string;

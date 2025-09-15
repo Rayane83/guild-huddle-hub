@@ -38,7 +38,7 @@ interface Enterprise {
   discord_role_id: string;
 }
 
-export function DotationForm({ guildId, currentRole, entreprise }: DotationFormProps) {
+export function DotationManager({ guildId, currentRole, entreprise }: DotationFormProps) {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [enterprises, setEnterprises] = useState<Enterprise[]>([]);
   const [selectedEnterprise, setSelectedEnterprise] = useState<string>('');
