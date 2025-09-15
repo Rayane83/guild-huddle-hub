@@ -41,6 +41,18 @@ export function useAuthConsolidated() {
 
   const fetchUserRole = useCallback(async (userId: string): Promise<UserRole> => {
     try {
+      // D'abord vérifier dans auth_credentials (système superadmin-auth)
+      const { data: credentials } = await supabase
+        .from('auth_credentials')
+        .select('is_superstaff')
+        .eq('user_id', userId)
+        .maybeSingle();
+      
+      if (credentials?.is_superstaff) {
+        return 'superadmin';
+      }
+      
+      // Sinon, vérifier dans user_roles (système standard)
       const { data, error } = await supabase.rpc('get_user_highest_role', { _user_id: userId });
       if (error) {
         console.error('Erreur lors de la récupération du rôle:', error);
