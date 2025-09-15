@@ -1,7 +1,4 @@
-// Composant temporairement simplifié en attendant la reconstruction
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { AlertTriangle } from "lucide-react";
+import { TaxManager } from './TaxManager';
 
 interface ImpotFormProps {
   guildId: string;
@@ -10,32 +7,5 @@ interface ImpotFormProps {
 }
 
 export function ImpotForm({ guildId, currentRole, entreprise }: ImpotFormProps) {
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Impôts</h2>
-        <Badge variant="outline">Reconstruction en cours</Badge>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <AlertTriangle className="w-5 h-5 text-warning" />
-            <span>Fonctionnalité en cours de reconstruction</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">
-            Le système d'impôts est temporairement indisponible pendant la reconstruction de la base de données.
-            Cette fonctionnalité sera rétablie sous peu avec une nouvelle interface de gestion des taxes.
-          </p>
-          <div className="mt-4 text-sm text-muted-foreground">
-            <p><strong>Guild ID:</strong> {guildId}</p>
-            <p><strong>Rôle:</strong> {currentRole || 'Non défini'}</p>
-            <p><strong>Entreprise:</strong> {entreprise || 'Non définie'}</p>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
+  return <TaxManager guildId={guildId} currentRole={currentRole} entreprise={entreprise} />;
 }

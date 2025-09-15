@@ -1,7 +1,4 @@
-// Composant temporairement simplifié en attendant la régénération des types Supabase
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { AlertTriangle } from "lucide-react";
+import { MoneyLaunderingManager } from './MoneyLaunderingManager';
 
 interface BlanchimentToggleProps {
   guildId: string;
