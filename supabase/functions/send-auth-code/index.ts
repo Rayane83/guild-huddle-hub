@@ -69,7 +69,7 @@ const handler = async (req: Request): Promise<Response> => {
     `;
 
     const emailResponse = await resend.emails.send({
-      from: "Portail Superadmin <noreply@flashbackfa.com>",
+      from: "Portail Superadmin <onboarding@resend.dev>",
       to: [email],
       subject: subject,
       html: html,
