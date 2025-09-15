@@ -37,6 +37,10 @@ import {
   isDot,
 } from '@/lib/roles';
 
+// API
+import { enterprisesApi } from '@/lib/newApi';
+import type { Enterprise } from '@/lib/types';
+
 // Icons
 import { 
   BarChart3, 
@@ -62,6 +66,9 @@ const Index = () => {
   // Synchronisation automatique des configurations
   const { triggerDataRefresh } = useConfigSync();
 
+  // State pour les entreprises
+  const [enterprises, setEnterprises] = useState<Enterprise[]>([]);
+
   // Debug: ajouter un listener pour voir les événements de sync
   useEffect(() => {
     const handleConfigSync = (event: CustomEvent) => {
@@ -79,6 +86,21 @@ const Index = () => {
       window.removeEventListener('data-sync', handleDataSync as EventListener);
     };
   }, []);
+
+  // Charger les entreprises
+  useEffect(() => {
+    async function loadEnterprises() {
+      if (guilds.selectedGuildId) {
+        try {
+          const data = await enterprisesApi.getByGuild(guilds.selectedGuildId);
+          setEnterprises(data);
+        } catch (error) {
+          console.error('Erreur lors du chargement des entreprises:', error);
+        }
+      }
+    }
+    loadEnterprises();
+  }, [guilds.selectedGuildId]);
   
   // Local UI state
   const [activeTab, setActiveTab] = useState('dashboard');
