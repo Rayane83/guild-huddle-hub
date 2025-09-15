@@ -81,6 +81,61 @@ export default function CompanyConfigPage() {
   const [entreprises, setEntreprises] = useState<Array<{id:string; name:string}>>([]);
   const [selectedEntrepriseId, setSelectedEntrepriseId] = useState<string>("");
 
+  // TOUS les useEffect doivent être ici AVANT tout retour conditionnel
+  useEffect(() => {
+    document.title = "Configuration d'entreprise | Portail";
+  }, []);
+
+  useEffect(() => {
+    let alive = true;
+    async function loadRole() {
+      if (!guildId || !isAuthenticated) return;
+      const roles = await getUserGuildRoles(guildId);
+      if (!alive) return;
+      const role = resolveRole(roles);
+      setCurrentRole(role);
+      if (role === 'patron' || role === 'co-patron') {
+        const entreprise = getEntrepriseFromRoles(roles);
+        setCfg((prev)=> {
+          const current = prev.identification.label;
+          const shouldReplace = !current || current.toLowerCase() === 'entreprise';
+          return { ...prev, identification: { ...prev.identification, label: shouldReplace ? entreprise : current } };
+        });
+      }
+    }
+    loadRole();
+    return () => {
+      alive = false;
+    };
+  }, [guildId, isAuthenticated]);
+
+  // Liste des entreprises (Staff)
+  useEffect(() => {
+    let alive = true;
+    async function loadList() {
+      if (!guildId || !isAuthenticated) return;
+      try {
+        const list = await mockApi.getEntreprises(guildId);
+        if (!alive) return;
+        setEntreprises(list as any);
+      } catch {}
+    }
+    loadList();
+    return () => { alive = false; };
+  }, [guildId, isAuthenticated]);
+
+  // Sélection d'entreprise -> refléter dans l'identification affichée
+  useEffect(() => {
+    if (!isStaff(currentRole)) return;
+    const ent = entreprises.find(e => e.id === selectedEntrepriseId);
+    if (ent) {
+      setCfg((prev) => ({ ...prev, identification: { ...prev.identification, label: ent.name } }));
+    }
+  }, [selectedEntrepriseId, entreprises, currentRole]);
+
+  // Accès
+  const hasAccess = canAccessCompanyConfig(currentRole);
+
   // Vérification d'authentification APRÈS tous les hooks
   if (!isAuthenticated) {
     return (
@@ -100,60 +155,6 @@ export default function CompanyConfigPage() {
       </div>
     );
   }
-
-  useEffect(() => {
-    document.title = "Configuration d'entreprise | Portail";
-  }, []);
-
-  useEffect(() => {
-    let alive = true;
-    async function loadRole() {
-      if (!guildId) return;
-      const roles = await getUserGuildRoles(guildId);
-      if (!alive) return;
-      const role = resolveRole(roles);
-      setCurrentRole(role);
-      if (role === 'patron' || role === 'co-patron') {
-        const entreprise = getEntrepriseFromRoles(roles);
-        setCfg((prev)=> {
-          const current = prev.identification.label;
-          const shouldReplace = !current || current.toLowerCase() === 'entreprise';
-          return { ...prev, identification: { ...prev.identification, label: shouldReplace ? entreprise : current } };
-        });
-      }
-    }
-    loadRole();
-    return () => {
-      alive = false;
-    };
-  }, [guildId]);
-
-  // Liste des entreprises (Staff)
-  useEffect(() => {
-    let alive = true;
-    async function loadList() {
-      if (!guildId) return;
-      try {
-        const list = await mockApi.getEntreprises(guildId);
-        if (!alive) return;
-        setEntreprises(list as any);
-      } catch {}
-    }
-    loadList();
-    return () => { alive = false; };
-  }, [guildId]);
-
-  // Sélection d'entreprise -> refléter dans l'identification affichée
-  useEffect(() => {
-    if (!isStaff(currentRole)) return;
-    const ent = entreprises.find(e => e.id === selectedEntrepriseId);
-    if (ent) {
-      setCfg((prev) => ({ ...prev, identification: { ...prev.identification, label: ent.name } }));
-    }
-  }, [selectedEntrepriseId, entreprises, currentRole]);
-
-  // Accès
-  const hasAccess = canAccessCompanyConfig(currentRole);
 
   const saveLocal = async () => {
     try {
