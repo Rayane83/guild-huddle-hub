@@ -256,25 +256,26 @@ async function handleRegisterWithCode(data: any) {
   if (authError || !authUser.user) {
     // Handle specific Supabase Auth errors
     if (authError?.message?.includes('already been registered')) {
-      // L'utilisateur existe déjà dans auth.users -> créer/mettre à jour les credentials et le profil
-      // Récupérer l'user_id via la table profiles (service role contourne les RLS)
-      const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('user_id')
-        .eq('email', email)
-        .single();
-
-      const existingUserId = existingProfile?.user_id;
-
-      if (!existingUserId) {
+      // L'utilisateur existe déjà dans auth.users -> récupérer l'user_id directement via auth.users
+      const { data: existingAuthUser, error: getUserError } = await supabase.auth.admin.listUsers();
+      
+      if (getUserError) {
+        throw new Error(`Erreur lors de la récupération des utilisateurs: ${getUserError.message}`);
+      }
+      
+      const existingUser = existingAuthUser.users.find(u => u.email === email);
+      
+      if (!existingUser) {
         return new Response(JSON.stringify({ 
-          error: "Cet email existe déjà, mais le profil n'est pas initialisé. Contactez un administrateur.",
-          type: 'EMAIL_EXISTS_NO_PROFILE'
+          error: "Utilisateur non trouvé dans le système d'authentification",
+          type: 'USER_NOT_FOUND'
         }), {
-          status: 409,
+          status: 404,
           headers: { "Content-Type": "application/json", ...corsHeaders },
         });
       }
+
+      const existingUserId = existingUser.id;
 
       // Hasher le mot de passe et (upsert manuel) des credentials
       const passwordHashExisting = await hashPassword(password);
