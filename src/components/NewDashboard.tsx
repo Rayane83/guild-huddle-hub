@@ -2,100 +2,117 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatCurrencyDollar } from '@/lib/fmt';
+import { useAuthConsolidated } from '@/hooks/useAuthConsolidated';
+import { useGuilds } from '@/hooks/useGuilds';
+import { useSimpleGuildRoles } from '@/hooks/useSimpleGuildRoles';
 import { 
   TrendingUp, 
   Users, 
   Calendar,
   Building2,
-  RefreshCw
+  RefreshCw,
+  Shield
 } from 'lucide-react';
-import { guildsApi, enterprisesApi, payrollReportsApi } from '@/lib/newApi';
+import { guildsApi, enterprisesApi } from '@/lib/newApi';
 import type { Enterprise } from '@/lib/types';
 
-type LegacyGuild = {
-  id: string;
-  name: string;
-  icon?: string;
-};
-
 export function NewDashboard() {
-  const [guilds, setGuilds] = useState<LegacyGuild[]>([]);
-  const [selectedGuildId, setSelectedGuildId] = useState<string>('');
+  const { userRole, isAuthenticated, user } = useAuthConsolidated();
+  const { guilds, selectedGuildId, selectGuild } = useGuilds();
+  const { currentRole, entreprise, isLoading: rolesLoading } = useSimpleGuildRoles(selectedGuildId);
   const [enterprises, setEnterprises] = useState<Enterprise[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [stats, setStats] = useState({
-    totalEnterprises: 0,
-    totalEmployees: 0,
-    latestReports: 0
-  });
 
-  // Charger les guildes
   useEffect(() => {
-    async function loadGuilds() {
+    async function loadData() {
       try {
-        const data = await guildsApi.getAll();
-        const legacyGuilds = data.map(g => ({
-          id: g.discord_id,
-          name: g.name,
-          icon: g.icon_url
-        }));
-        setGuilds(legacyGuilds);
-        if (legacyGuilds.length > 0 && !selectedGuildId) {
-          setSelectedGuildId(legacyGuilds[0].id);
+        // Récupérer les entreprises pour le guild sélectionné
+        if (selectedGuildId) {
+          const data = await enterprisesApi.getByGuild(selectedGuildId);
+          setEnterprises(data);
         }
       } catch (error) {
-        console.error('Erreur lors du chargement des guildes:', error);
+        console.error('Erreur lors du chargement des entreprises:', error);
+      } finally {
+        setIsLoading(false);
       }
     }
-    loadGuilds();
+    loadData();
   }, [selectedGuildId]);
 
-  const selectedGuild = guilds.find(g => g.id === selectedGuildId);
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="max-w-md">
+          <CardContent className="p-8 text-center">
+            <Shield className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+            <h3 className="text-lg font-semibold mb-2">Connexion requise</h3>
+            <p className="text-muted-foreground">
+              Veuillez vous connecter pour accéder au dashboard.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Dashboard Principal</h1>
-          <p className="text-muted-foreground">Vue d'ensemble avec la nouvelle structure de base de données</p>
+          <p className="text-muted-foreground">
+            Bienvenue, {user?.email} - Rôle: {userRole}
+          </p>
+          <div className="flex items-center space-x-2 mt-2">
+            <Badge variant={userRole === 'superadmin' ? 'destructive' : 'secondary'}>
+              {userRole === 'superadmin' ? 'Superadmin' : currentRole}
+            </Badge>
+            {entreprise && (
+              <Badge variant="outline">
+                {entreprise}
+              </Badge>
+            )}
+          </div>
         </div>
         <Badge variant="outline" className="flex items-center space-x-1">
           <Calendar className="w-3 h-3" />
-          <span>Structure Reconstruite</span>
+          <span>Système Opérationnel</span>
         </Badge>
       </div>
 
-      {/* Message de succès */}
+      {/* Informations utilisateur */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
-            <Building2 className="w-5 h-5 text-success" />
-            <span>Base de données reconstruite avec succès</span>
+            <Shield className="w-5 h-5 text-success" />
+            <span>Informations de connexion</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">
-            La base de données a été entièrement reconstruite avec une structure simplifiée et moderne. 
-            Les anciennes tables ont été supprimées et remplacées par des tables optimisées.
-          </p>
-          <div className="mt-4">
-            <p className="text-sm font-medium">Nouvelles tables créées :</p>
-            <div className="flex flex-wrap gap-2 mt-2">
-              <Badge variant="secondary">profiles</Badge>
-              <Badge variant="secondary">guilds</Badge>
-              <Badge variant="secondary">enterprises</Badge>
-              <Badge variant="secondary">employees</Badge>
-              <Badge variant="secondary">payroll_reports</Badge>
-              <Badge variant="secondary">payroll_entries</Badge>
-              <Badge variant="secondary">archives</Badge>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Email</p>
+              <p className="text-lg">{user?.email || 'Non disponible'}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Rôle système</p>
+              <Badge variant={userRole === 'superadmin' ? 'destructive' : 'secondary'}>
+                {userRole}
+              </Badge>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Rôle entreprise</p>
+              <Badge variant="outline">
+                {currentRole}
+              </Badge>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Statistiques basiques */}
+      {/* Statistiques */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="stat-card">
           <CardContent className="p-6">
@@ -125,14 +142,57 @@ export function NewDashboard() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Structure</p>
-                <p className="text-2xl font-bold text-success">✓ Propre</p>
+                <p className="text-sm font-medium text-muted-foreground">Statut</p>
+                <p className="text-2xl font-bold text-success">✓ Actif</p>
               </div>
               <TrendingUp className="w-8 h-8 text-warning" />
             </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Actions rapides pour superadmin */}
+      {userRole === 'superadmin' && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Shield className="w-5 h-5 text-destructive" />
+              <span>Actions Superadmin</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" onClick={() => window.location.href = '/superadmin'}>
+                Panneau Superadmin
+              </Button>
+              <Button variant="outline" onClick={() => window.location.href = '/company-config'}>
+                Configuration Entreprises
+              </Button>
+              <Button variant="outline" onClick={() => window.location.href = '/hwip-admin'}>
+                Gestion HWIP
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Informations de debug */}
+      {userRole === 'superadmin' && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Debug Info</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-sm font-mono">
+              <p>User ID: {user?.id}</p>
+              <p>Selected Guild: {selectedGuildId}</p>
+              <p>Current Role: {currentRole}</p>
+              <p>Enterprise: {entreprise}</p>
+              <p>Roles Loading: {rolesLoading ? 'Yes' : 'No'}</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
