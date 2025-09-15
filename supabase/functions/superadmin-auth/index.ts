@@ -173,10 +173,13 @@ async function handleVerifyLoginCode(data: any) {
 
   // Le code a déjà été marqué comme utilisé par validate_and_consume_auth_code
 
-  // Créer une session Supabase
+  // Créer une session Supabase avec la bonne URL de redirection
   const { data: authData, error: authError } = await supabase.auth.admin.generateLink({
     type: 'magiclink',
-    email: email
+    email: email,
+    options: {
+      redirectTo: `${req.headers.get('origin') || 'https://af9bbd67-a473-4fc4-bd6b-bc26cdfcce51.lovableproject.com'}/superadmin`
+    }
   });
 
   if (authError) {
