@@ -391,15 +391,7 @@ export type Database = {
           name?: string
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "enterprises_guild_id_fkey"
-            columns: ["guild_id"]
-            isOneToOne: false
-            referencedRelation: "guilds"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       guilds: {
         Row: {

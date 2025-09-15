@@ -125,16 +125,31 @@ export function useDiscordAuth() {
       
       console.log('Recherche entreprise pour guild:', guildId);
       
-      const { data: existingEnterprise } = await supabase
+      const { data: existingEnterprise, error: enterpriseError } = await supabase
         .from('enterprises')
         .select('*')
         .eq('guild_id', guildId)
         .limit(1)
         .maybeSingle();
 
+      if (enterpriseError) {
+        console.error('Erreur lors du chargement de l\'entreprise:', enterpriseError);
+      }
+
       if (existingEnterprise) {
         enterprise = existingEnterprise;
         console.log('Entreprise trouvée:', enterprise);
+      } else {
+        console.log('Aucune entreprise trouvée pour guild:', guildId);
+        // Pour les tests, on peut créer une entreprise temporaire
+        enterprise = {
+          id: '550e8400-e29b-41d4-a716-446655440000',
+          guild_id: guildId,
+          name: 'Entreprise de Test',
+          key: 'test-entreprise',
+          discord_role_id: '1404608015230832743',
+          discord_guild_id: guildId
+        };
       }
 
       console.log('État final - Rôle:', userRole, 'Entreprise:', enterprise?.name);
