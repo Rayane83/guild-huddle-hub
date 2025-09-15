@@ -74,8 +74,14 @@ export default function CompanyConfigPage() {
   const navigate = useNavigate();
   const guildId = query.get("guild") || "";
   const [currentRole, setCurrentRole] = useState<Role>("employe");
+  const [employees, setEmployees] = useState<any[]>([]);
+  const [cfg, setCfg] = useState<CompanyConfig>(defaultCompanyConfig);
+  const [salaryPaliers, setSalaryPaliers] = useState<Bracket[]>([]);
+  const { toast } = useToast();
+  const [entreprises, setEntreprises] = useState<Array<{id:string; name:string}>>([]);
+  const [selectedEntrepriseId, setSelectedEntrepriseId] = useState<string>("");
 
-  // Vérification d'authentification AVANT tout le reste
+  // Vérification d'authentification APRÈS tous les hooks
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -94,14 +100,6 @@ export default function CompanyConfigPage() {
       </div>
     );
   }
-
-  const [employees, setEmployees] = useState<any[]>([]);
-  const [cfg, setCfg] = useState<CompanyConfig>(defaultCompanyConfig);
-  const [salaryPaliers, setSalaryPaliers] = useState<Bracket[]>([]);
-  const { toast } = useToast();
-
-  const [entreprises, setEntreprises] = useState<Array<{id:string; name:string}>>([]);
-  const [selectedEntrepriseId, setSelectedEntrepriseId] = useState<string>("");
 
   useEffect(() => {
     document.title = "Configuration d'entreprise | Portail";
