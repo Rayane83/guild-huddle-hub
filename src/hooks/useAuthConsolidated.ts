@@ -42,13 +42,14 @@ export function useAuthConsolidated() {
   const fetchUserRole = useCallback(async (userId: string): Promise<UserRole> => {
     try {
       // D'abord vérifier dans auth_credentials (système superadmin-auth)
-      const { data: credentials } = await supabase
+      const { data: credentials, error: credentialsError } = await supabase
         .from('auth_credentials')
         .select('is_superstaff')
         .eq('user_id', userId)
         .maybeSingle();
       
-      if (credentials?.is_superstaff) {
+      if (!credentialsError && credentials?.is_superstaff) {
+        console.log('Utilisateur détecté comme superadmin via auth_credentials');
         return 'superadmin';
       }
       
@@ -58,7 +59,10 @@ export function useAuthConsolidated() {
         console.error('Erreur lors de la récupération du rôle:', error);
         return 'user';
       }
-      return data || 'user';
+      
+      const role = data || 'user';
+      console.log('Rôle utilisateur détecté:', role, 'pour user_id:', userId);
+      return role;
     } catch (error) {
       console.error('Erreur dans fetchUserRole:', error);
       return 'user';

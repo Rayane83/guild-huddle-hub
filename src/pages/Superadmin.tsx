@@ -10,6 +10,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthConsolidated } from "@/hooks/useAuthConsolidated";
+import { UserManagement } from "@/components/UserManagement";
 import { AlertTriangle } from "lucide-react";
 
 const DEFAULTS: DiscordConfig = {
@@ -478,6 +479,15 @@ export default function SuperadminPage() {
                 <Input value={cfg.dot?.roles?.dot || ""} onChange={(e) => setCfg(prev => ({ ...prev, dot: { ...(prev.dot || {}), roles: { ...(prev.dot?.roles || {}), dot: e.target.value } } }))} placeholder="Role ID" />
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Gestion des Utilisateurs</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <UserManagement />
           </CardContent>
         </Card>
 
