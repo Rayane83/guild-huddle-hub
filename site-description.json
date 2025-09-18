@@ -1,0 +1,480 @@
+{
+  "application": {
+    "name": "Discord Enterprise Management System",
+    "description": "Système de gestion d'entreprises Discord avec fonctionnalités de paie, fiscalité, comptabilité et blanchiment d'argent",
+    "technology_stack": {
+      "frontend": ["React 18", "TypeScript", "Vite", "Tailwind CSS", "Shadcn/ui", "React Router", "React Query"],
+      "backend": ["Supabase", "PostgreSQL", "Edge Functions", "Discord API"],
+      "authentication": "Discord OAuth avec système de rôles hiérarchique"
+    }
+  },
+  "user_roles": {
+    "hierarchy": [
+      "Employé (niveau 1)",
+      "Co-Patron (niveau 2)", 
+      "Patron (niveau 3)",
+      "DOT (niveau 4)",
+      "Staff/Admin (niveau 5)",
+      "Superadmin (niveau 6)"
+    ],
+    "descriptions": {
+      "employee": "Employé de base avec accès limité aux informations personnelles",
+      "co_patron": "Co-gérant avec accès étendu mais limité par rapport au patron",
+      "patron": "Gérant d'entreprise avec accès complet à la gestion de son entreprise",
+      "dot": "Département des Transports avec accès fiscal inter-entreprises",
+      "staff": "Administrateur avec accès complet multi-entreprises",
+      "superadmin": "Super administrateur avec tous les privilèges système"
+    }
+  },
+  "pages_and_features": {
+    "main_dashboard": {
+      "route": "/",
+      "description": "Tableau de bord principal avec navigation par onglets",
+      "tabs": {
+        "dashboard": {
+          "name": "Dashboard",
+          "description": "Vue d'ensemble avec informations de base",
+          "content": [
+            "Semaine ISO courante",
+            "Guild ID Discord", 
+            "Rôle utilisateur",
+            "Informations entreprise",
+            "Résumé des activités"
+          ],
+          "access": ["employee", "co_patron", "patron", "dot", "staff", "superadmin"]
+        },
+        "dotations": {
+          "name": "Dotations",
+          "description": "Gestion des dotations d'entreprise",
+          "content": [
+            "Création de rapports de dotation",
+            "Calcul automatique des montants",
+            "Historique des dotations",
+            "Export PDF des rapports"
+          ],
+          "access": ["patron", "staff", "superadmin"]
+        },
+        "impots": {
+          "name": "Impôts",
+          "description": "Gestion fiscale complète",
+          "content": [
+            "Calcul des impôts sur les revenus",
+            "Tranches fiscales configurables",
+            "Génération de fiches d'impôt",
+            "Export PDF des déclarations",
+            "Gestion des taux d'imposition"
+          ],
+          "access": ["patron", "dot", "staff", "superadmin"]
+        },
+        "blanchiment": {
+          "name": "Blanchiment",
+          "description": "Gestion des opérations de blanchiment d'argent",
+          "content": [
+            "Configuration des paramètres de blanchiment",
+            "Suivi des opérations",
+            "Rapports de conformité",
+            "Gestion des seuils et limites"
+          ],
+          "access": ["patron", "staff", "superadmin"],
+          "status": "En reconstruction"
+        },
+        "archives": {
+          "name": "Archives",
+          "description": "Consultation des données archivées",
+          "content": [
+            "Historique des rapports",
+            "Archives des calculs de paie",
+            "Consultation des anciens documents",
+            "Système de recherche avancée"
+          ],
+          "access": ["patron", "staff", "superadmin"]
+        },
+        "documents": {
+          "name": "Documents",
+          "description": "Gestion des documents d'entreprise",
+          "content": [
+            "Upload de documents",
+            "Catégorisation automatique",
+            "Système de tags",
+            "Prévisualisation des fichiers",
+            "Contrôle d'accès par rôle"
+          ],
+          "access": ["dot", "patron", "staff", "superadmin"]
+        },
+        "comptabilite": {
+          "name": "Comptabilité Avancée",
+          "description": "Gestion comptable complète de l'entreprise",
+          "content": [
+            "Suivi des revenus et dépenses",
+            "Bilan comptable",
+            "Rapports financiers",
+            "Intégration avec les systèmes de paie"
+          ],
+          "access": ["patron", "staff", "superadmin"]
+        },
+        "salaires": {
+          "name": "Calcul de Salaires",
+          "description": "Calculateur de salaires avec gestion fiscale",
+          "content": [
+            "Calcul automatique des salaires",
+            "Intégration des grades et qualifications",
+            "Gestion des heures supplémentaires",
+            "Calcul des cotisations sociales",
+            "Export des bulletins de paie"
+          ],
+          "access": ["patron", "staff", "superadmin"]
+        },
+        "qualifications": {
+          "name": "Qualifications",
+          "description": "Gestion des qualifications des employés",
+          "content": [
+            "Attribution de qualifications",
+            "Suivi des certifications",
+            "Impact sur les salaires",
+            "Historique des qualifications"
+          ],
+          "access": ["patron", "staff", "superadmin"]
+        },
+        "config_staff": {
+          "name": "Config Staff",
+          "description": "Configuration réservée au personnel administratif",
+          "content": [
+            "Paramètres système avancés",
+            "Configuration des permissions",
+            "Gestion des utilisateurs privilégiés"
+          ],
+          "access": ["staff", "superadmin"]
+        }
+      }
+    },
+    "company_config": {
+      "route": "/patron-config",
+      "description": "Configuration complète de l'entreprise (Patrons uniquement)",
+      "sections": {
+        "company_identification": {
+          "name": "Identification Entreprise",
+          "fields": [
+            "Nom de l'entreprise",
+            "Type d'entreprise",
+            "Description",
+            "Informations de contact"
+          ]
+        },
+        "salary_configuration": {
+          "name": "Configuration Salaires Avancée",
+          "features": [
+            "Calculateur de salaire intégré",
+            "Pourcentage de CA",
+            "Modes de calcul multiples",
+            "Bonus de base et paliers"
+          ]
+        },
+        "calculation_parameters": {
+          "name": "Paramètres de Calcul",
+          "parameters": [
+            "RUN (Revenus d'Unité Nette)",
+            "FACTURE (Facturation)",
+            "VENTE (Ventes)",
+            "CA_TOTAL (Chiffre d'Affaires Total)",
+            "GRADE (Niveau hiérarchique)",
+            "HEURE_SERVICE (Heures de service)"
+          ],
+          "configuration": [
+            "Activation/désactivation par paramètre",
+            "Mode cumulatif",
+            "Jusqu'à 10 paliers par paramètre"
+          ]
+        },
+        "grade_management": {
+          "name": "Gestion des Grades",
+          "features": [
+            "Nom du grade",
+            "ID de rôle Discord associé",
+            "Pourcentage de CA",
+            "Taux horaire",
+            "Hiérarchie des grades"
+          ]
+        },
+        "employee_management": {
+          "name": "Gestion des Employés",
+          "features": [
+            "Ajout manuel d'employés",
+            "Import CSV massif",
+            "Attribution de grades",
+            "Liaison avec rôles Discord",
+            "Export JSON complet",
+            "Export CSV pour employés"
+          ]
+        },
+        "save_features": {
+          "name": "Fonctionnalités de Sauvegarde",
+          "options": [
+            "Sauvegarde locale",
+            "Export JSON complet",
+            "Import/Export CSV"
+          ]
+        }
+      },
+      "access": ["patron", "staff", "superadmin"]
+    },
+    "superadmin_page": {
+      "route": "/superadmin",
+      "description": "Administration système (Staff/Superadmin uniquement)",
+      "sections": {
+        "discord_config": {
+          "name": "Configuration Discord",
+          "features": [
+            "Paramétrage des rôles Discord",
+            "Mapping des permissions",
+            "Configuration des guildes"
+          ]
+        },
+        "enterprise_management": {
+          "name": "Gestion des Entreprises",
+          "features": [
+            "Liste de toutes les entreprises",
+            "Création/modification d'entreprises",
+            "Attribution de gérants",
+            "Surveillance des activités"
+          ]
+        },
+        "tax_brackets": {
+          "name": "Tranches Fiscales",
+          "features": [
+            "Configuration des taux d'imposition",
+            "Définition des tranches de revenus",
+            "Paramètres fiscaux globaux"
+          ]
+        },
+        "money_laundering_global": {
+          "name": "Blanchiment Global",
+          "features": [
+            "Paramètres de blanchiment système",
+            "Surveillance des opérations suspectes",
+            "Rapports de conformité globaux"
+          ]
+        },
+        "security": {
+          "name": "Sécurité",
+          "features": [
+            "Gestion des accès système",
+            "Logs de sécurité",
+            "Authentification renforcée"
+          ]
+        },
+        "user_management": {
+          "name": "Gestion des Utilisateurs",
+          "features": [
+            "Attribution de rôles",
+            "Gestion des permissions",
+            "Surveillance des comptes"
+          ]
+        },
+        "hwip_admin": {
+          "name": "Administration HWIP",
+          "features": [
+            "Gestion des restrictions matérielles",
+            "Contrôle des accès par dispositif"
+          ]
+        }
+      },
+      "access": ["staff", "superadmin"]
+    },
+    "auth_page": {
+      "route": "/auth",
+      "description": "Page d'authentification Discord",
+      "features": [
+        "Connexion Discord OAuth",
+        "Gestion des sessions",
+        "Redirection automatique après connexion"
+      ],
+      "access": ["public"]
+    },
+    "hwip_admin": {
+      "route": "/hwip-admin",
+      "description": "Administration des restrictions matérielles",
+      "features": [
+        "Gestion des identifiants matériels",
+        "Restrictions d'accès par dispositif",
+        "Logs des tentatives de connexion"
+      ],
+      "access": ["staff", "superadmin"]
+    }
+  },
+  "permissions_matrix": {
+    "employee": {
+      "dashboard": true,
+      "dotations": false,
+      "impots": false,
+      "blanchiment": false,
+      "archives": false,
+      "documents": false,
+      "comptabilite": false,
+      "salaires": false,
+      "qualifications": false,
+      "config_staff": false,
+      "company_config": false,
+      "superadmin": false
+    },
+    "co_patron": {
+      "dashboard": true,
+      "dotations": true,
+      "impots": true,
+      "blanchiment": true,
+      "archives": true,
+      "documents": true,
+      "comptabilite": true,
+      "salaires": true,
+      "qualifications": true,
+      "config_staff": false,
+      "company_config": false,
+      "superadmin": false
+    },
+    "patron": {
+      "dashboard": true,
+      "dotations": true,
+      "impots": true,
+      "blanchiment": true,
+      "archives": true,
+      "documents": true,
+      "comptabilite": true,
+      "salaires": true,
+      "qualifications": true,
+      "config_staff": false,
+      "company_config": true,
+      "superadmin": false
+    },
+    "dot": {
+      "dashboard": true,
+      "dotations": false,
+      "impots": true,
+      "blanchiment": false,
+      "archives": false,
+      "documents": true,
+      "comptabilite": false,
+      "salaires": false,
+      "qualifications": false,
+      "config_staff": false,
+      "company_config": false,
+      "superadmin": false
+    },
+    "staff": {
+      "dashboard": true,
+      "dotations": true,
+      "impots": true,
+      "blanchiment": true,
+      "archives": true,
+      "documents": true,
+      "comptabilite": true,
+      "salaires": true,
+      "qualifications": true,
+      "config_staff": true,
+      "company_config": true,
+      "superadmin": true
+    },
+    "superadmin": {
+      "dashboard": true,
+      "dotations": true,
+      "impots": true,
+      "blanchiment": true,
+      "archives": true,
+      "documents": true,
+      "comptabilite": true,
+      "salaires": true,
+      "qualifications": true,
+      "config_staff": true,
+      "company_config": true,
+      "superadmin": true
+    }
+  },
+  "key_functionalities": {
+    "authentication": {
+      "method": "Discord OAuth",
+      "features": [
+        "Extraction automatique des rôles Discord",
+        "Mapping hiérarchique des permissions",
+        "Sessions persistantes",
+        "Authentification sécurisée HWIP"
+      ]
+    },
+    "payroll_system": {
+      "features": [
+        "Calcul automatique des salaires",
+        "Paliers configurables",
+        "Intégration des grades Discord",
+        "Gestion des qualifications",
+        "Export des bulletins"
+      ]
+    },
+    "tax_system": {
+      "features": [
+        "Tranches fiscales personnalisables",
+        "Calcul automatique des impôts",
+        "Génération de fiches fiscales",
+        "Export PDF des déclarations"
+      ]
+    },
+    "money_laundering": {
+      "features": [
+        "Configuration des paramètres",
+        "Suivi des opérations",
+        "Rapports de conformité",
+        "Gestion des seuils"
+      ],
+      "status": "En développement"
+    },
+    "document_management": {
+      "features": [
+        "Upload sécurisé",
+        "Catégorisation automatique",
+        "Contrôle d'accès par rôle",
+        "Système de tags",
+        "Prévisualisation intégrée"
+      ]
+    },
+    "enterprise_management": {
+      "features": [
+        "Gestion multi-entreprises",
+        "Configuration par entreprise",
+        "Tableau de bord unifié",
+        "Synchronisation Discord"
+      ]
+    }
+  },
+  "technical_features": {
+    "unified_storage": {
+      "description": "Cache en mémoire avec TTL",
+      "scopes": ["global", "guild", "enterprise", "user"],
+      "features": ["Synchronisation temps réel", "Persistance automatique"]
+    },
+    "edge_functions": [
+      "discord-user-roles",
+      "discord-role-counts", 
+      "discord-sync",
+      "discord-health",
+      "custom-auth-secure",
+      "send-auth-code",
+      "superadmin-auth"
+    ],
+    "database": {
+      "type": "PostgreSQL via Supabase",
+      "security": "Row Level Security (RLS)",
+      "tables": [
+        "enterprises",
+        "app_storage",
+        "dotation_reports",
+        "tax_brackets",
+        "blanchiment_settings",
+        "profiles",
+        "user_roles"
+      ]
+    },
+    "ui_ux": {
+      "design_system": "Tokens sémantiques HSL",
+      "themes": ["Mode sombre", "Mode clair"],
+      "components": "Shadcn/ui personnalisés",
+      "animations": "Transitions fluides",
+      "responsive": true
+    }
+  }
+}
